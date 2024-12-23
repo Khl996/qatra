@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>تفاصيل المتجر - قطرة</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const storeId = new URLSearchParams(window.location.search).get('id');
+            fetch(`/api/store/${storeId}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('store-name').textContent = data.name;
+                    document.getElementById('points').textContent = `النقاط: ${data.points}`;
+                    const offersList = document.getElementById('offers');
+                    data.offers.forEach(offer => {
+                        const offerItem = document.createElement('li');
+                        offerItem.textContent = offer;
+                        offersList.appendChild(offerItem);
+                    });
+                })
+                .catch(err => {
+                    document.getElementById('store-details').textContent = "لم يتم العثور على المتجر";
+                });
+
+            // جلب سجل النقاط
+            fetch(`/api/store/${storeId}/points-log`)
+                .then(response => response.json())
+                .then(logData => {
+                    const logSection = document.getElementById('points-log');
+                    logData.forEach(log => {
+                        const logItem = document.createElement('div');
+                        logItem.classList.add('log-item');
+                        logItem.innerHTML = `<p>${log.date}: ${log.details}</p>`;
+                        logSection.appendChild(logItem);
+                    });
+                });
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="logo">قطرة</div>
+    </header>
+    <main>
+        <section id="store-details">
+            <h2 id="store-name">اسم المتجر</h2>
+            <p id="points">النقاط: 0</p>
+            <h3>العروض</h3>
+            <ul id="offers"></ul>
+            <h3>سجل النقاط</h3>
+            <div id="points-log"></div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 قطرة. جميع الحقوق محفوظة.</p>
+    </footer>
+</body>
+</html>

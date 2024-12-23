@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <title>الرئيسية - قطرة</title>
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // جلب بيانات الإعلانات
+            fetch('/api/ads')
+                .then(response => response.json())
+                .then(data => {
+                    const adsSection = document.getElementById('ads');
+                    data.forEach(ad => {
+                        const adElement = document.createElement('div');
+                        adElement.classList.add('ad');
+                        adElement.innerHTML = `<h3>${ad.title}</h3><p>${ad.description}</p>`;
+                        adsSection.appendChild(adElement);
+                    });
+                });
+
+            // جلب بيانات المتاجر الأعلى تقييمًا
+            fetch('/api/top-stores')
+                .then(response => response.json())
+                .then(data => {
+                    const storesSection = document.getElementById('top-stores');
+                    data.forEach(store => {
+                        const storeElement = document.createElement('div');
+                        storeElement.classList.add('store');
+                        storeElement.innerHTML = `<h3><a href="store.html?id=${store.id}">${store.name}</a></h3><p>التقييم: ${store.rating}</p>`;
+                        storesSection.appendChild(storeElement);
+                    });
+                });
+        });
+    </script>
+</head>
+<body>
+    <header>
+        <div class="logo">قطرة</div>
+    </header>
+    <main>
+        <section id="ads">
+            <h2>الإعلانات المميزة</h2>
+            <!-- سيتم تعبئة الإعلانات هنا -->
+        </section>
+        <section id="top-stores">
+            <h2>أفضل المتاجر</h2>
+            <!-- سيتم تعبئة المتاجر هنا -->
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 قطرة. جميع الحقوق محفوظة.</p>
+    </footer>
+</body>
+</html>

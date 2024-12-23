@@ -7,6 +7,7 @@ const app = express();
 
 const sequelize = require('./config/database');
 const User = require('./models/userModel');
+const Store = require('./models/storeModel'); // استيراد نموذج المتجر
 const Ad = require('./models/adModel'); // استيراد نموذج الإعلان
 
 const corsOptions = {
@@ -22,9 +23,9 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // مزامنة الموديل مع قاعدة البيانات
-sequelize.sync({ force: true }) // إعادة إنشاء الجداول في قاعدة البيانات
-    .then(() => console.log('Database & tables created!'))
-    .catch(err => console.error('Error creating tables:', err));
+sequelize.sync({ alter: true }) // تحديث الجداول بدلاً من إعادة إنشائها
+    .then(() => console.log('Database & tables synced!'))
+    .catch(err => console.error('Error syncing tables:', err));
 
 // مسار API للتسجيل
 app.post('/auth/register', async (req, res) => {
@@ -81,8 +82,13 @@ app.post('/auth/login', async (req, res) => {
 app.post('/api/admin/ads', async (req, res) => {
     const { title, description, storeId } = req.body;
 
+    console.log('Received request to add ad:', { title, description, storeId }); // سجل التنقيح
+
     try {
         const ad = await Ad.create({ title, description, storeId });
+
+        console.log('Ad added:', ad); // سجل التنقيح
+
         res.json({ message: "تم إضافة الإعلان بنجاح", ad });
     } catch (error) {
         console.error('Error adding ad:', error);
@@ -98,6 +104,24 @@ app.get('/api/ads', async (req, res) => {
     } catch (error) {
         console.error('Error fetching ads:', error);
         res.status(500).json({ message: "حدث خطأ أثناء جلب الإعلانات", error: error.message });
+    }
+});
+
+// مسار API لإضافة متجر جديد بواسطة الإدارة
+app.post('/api/admin/stores', async (req, res) => {
+    const { name, rating } = req.body;
+
+    console.log('Received request to add store:', { name, rating }); // سجل التنقيح
+
+    try {
+        const store = await Store.create({ name, rating });
+
+        console.log('Store added:', store); // سجل التنقيح
+
+        res.json({ message: "تم إضافة المتجر بنجاح", store });
+    } catch (error) {
+        console.error('Error adding store:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء إضافة المتجر", error: error.message });
     }
 });
 

@@ -13,7 +13,7 @@ const Ad = sequelize.define('Ad', {
     storeId: {
         type: Sequelize.INTEGER,
         references: {
-            model: 'Stores', // اسم الجدول الذي يحتوي على المتاجر
+            model: 'Stores', // الربط مع جدول Stores
             key: 'id'
         }
     }

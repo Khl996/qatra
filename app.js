@@ -9,6 +9,7 @@ const sequelize = require('./config/database');
 const User = require('./models/userModel');
 const Store = require('./models/storeModel'); // استيراد نموذج المتجر
 const Ad = require('./models/adModel'); // استيراد نموذج الإعلان
+const StoreRequest = require('./models/storeRequestModel'); // استيراد نموذج طلب المتجر
 
 const corsOptions = {
     origin: 'http://localhost:9005', // استبدل هذا بالنطاق الصحيح إذا لزم الأمر
@@ -18,6 +19,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions)); // استخدام cors للسماح بالطلبات من نطاقات مختلفة
 app.use(bodyParser.json());
+
+// تعريف سجل النقاط الوهمي لتخزين نقاط المتاجر
+const pointsLog = {}; // أضف هذا السطر هنا
 
 // إعداد المسارات الثابتة لخدمة الملفات من مجلد 'public'
 app.use(express.static(path.join(__dirname, 'public')));
@@ -124,6 +128,89 @@ app.post('/api/admin/stores', async (req, res) => {
         res.status(500).json({ message: "حدث خطأ أثناء إضافة المتجر", error: error.message });
     }
 });
+// مسار API لإرسال طلب فتح حساب متجر
+app.post('/api/store-requests', async (req, res) => {
+    const { storeName, ownerName, email, phone } = req.body;
+
+    console.log('Received request to open store account:', { storeName, ownerName, email, phone }); // سجل التنقيح
+
+    try {
+        // حفظ الطلب في قاعدة البيانات
+        const request = await StoreRequest.create({ storeName, ownerName, email, phone });
+        res.json({ message: "تم إرسال الطلب بنجاح", request });
+    } catch (error) {
+        console.error('Error submitting request:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء إرسال الطلب", error: error.message });
+    }
+});
+
+// مسار API لجلب جميع طلبات فتح الحسابات
+app.get('/api/store-requests', async (req, res) => {
+    try {
+        const requests = await StoreRequest.findAll();
+        res.json(requests);
+    } catch (error) {
+        console.error('Error fetching store requests:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء جلب طلبات فتح الحسابات", error: error.message });
+    }
+});
+
+// مسار API للموافقة على طلب فتح الحساب
+app.post('/api/store-requests/:id/approve', async (req, res) => {
+    const requestId = req.params.id;
+
+    try {
+        const request = await StoreRequest.findByPk(requestId);
+
+        if (request) {
+            // هنا يمكننا إنشاء متجر بناءً على بيانات الطلب
+            await Store.create({ name: request.storeName, rating: 0 });
+            await request.destroy();
+            res.json({ message: "تمت الموافقة على الطلب بنجاح" });
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على الطلب" });
+        }
+    } catch (error) {
+        console.error('Error approving store request:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء الموافقة على الطلب", error: error.message });
+    }
+});
+
+// مسار API لرفض طلب فتح الحساب
+app.post('/api/store-requests/:id/reject', async (req, res) => {
+    const requestId = req.params.id;
+
+    try {
+        const request = await StoreRequest.findByPk(requestId);
+
+        if (request) {
+            await request.destroy();
+            res.json({ message: "تم رفض الطلب بنجاح" });
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على الطلب" });
+        }
+    } catch (error) {
+        console.error('Error rejecting store request:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء رفض الطلب", error: error.message });
+    }
+});
+
+// مسار API لإضافة النقاط للمستخدمين
+app.post('/api/store/:id/add-points', async (req, res) => {
+    const storeId = req.params.id;
+    const { userId, amount } = req.body;
+
+    // حساب النقاط (لنفترض 1 نقطة لكل 10 وحدات من المبلغ)
+    const points = Math.floor(amount / 10);
+
+    // تحديث السجل الوهمي (يمكن استبداله بالتحديث الحقيقي للقاعدة البيانات)
+    if (!pointsLog[storeId]) {
+        pointsLog[storeId] = [];
+    }
+    pointsLog[storeId].push({ date: new Date().toISOString(), details: `إضافة ${points} نقطة للمستخدم ${userId}` });
+
+    res.json({ message: "تمت إضافة النقاط بنجاح", points });
+});
 
 // إضافة المسار للصفحة الرئيسية
 app.get('/', (req, res) => {
@@ -162,31 +249,25 @@ app.get('/api/store/:id/points-log', (req, res) => {
     }
 });
 
-// مسار API لإضافة النقاط للمستخدمين
-app.post('/api/store/:id/add-points', (req, res) => {
-    const storeId = req.params.id;
-    const { userId, amount } = req.body;
-
-    // حساب النقاط (لنفترض 1 نقطة لكل 10 وحدات من المبلغ)
-    const points = Math.floor(amount / 10);
-
-    // تحديث السجل الوهمي (يمكن استبداله بالتحديث الحقيقي للقاعدة البيانات)
-    if (!pointsLog[storeId]) {
-        pointsLog[storeId] = [];
-    }
-    pointsLog[storeId].push({ date: new Date().toISOString(), details: `إضافة ${points} نقطة للمستخدم ${userId}` });
-
-    res.json({ message: "تمت إضافة النقاط بنجاح", points });
-});
-
-// إضافة المسار لشاشة الترحيب
+// إضافة المسارات لشاشات مختلفة
 app.get('/welcome', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'welcome.html'));
 });
 
-// إضافة المسار لشاشة إدارة الإعلانات
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+app.get('/request-store', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'requestStore.html'));
+});
+
+app.get('/admin-panel', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'adminPanel.html'));
+});
+
+app.get('/add-points', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'addPoints.html'));
 });
 
 const PORT = process.env.PORT || 9005;

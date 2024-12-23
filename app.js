@@ -2,13 +2,20 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
-const cors = require('cors'); // استيراد مكتبة cors
+const cors = require('cors');
 const app = express();
 
 const sequelize = require('./config/database');
-const User = require('./models/userModel'); // تحديث المسار هنا
+const User = require('./models/userModel');
+const Ad = require('./models/adModel'); // استيراد نموذج الإعلان
 
-app.use(cors()); // استخدام cors للسماح بالطلبات من نطاقات مختلفة
+const corsOptions = {
+    origin: 'http://localhost:9005', // استبدل هذا بالنطاق الصحيح إذا لزم الأمر
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // إذا كنت تستخدم الكوكيز
+};
+
+app.use(cors(corsOptions)); // استخدام cors للسماح بالطلبات من نطاقات مختلفة
 app.use(bodyParser.json());
 
 // إعداد المسارات الثابتة لخدمة الملفات من مجلد 'public'
@@ -18,34 +25,6 @@ app.use(express.static(path.join(__dirname, 'public')));
 sequelize.sync({ force: true }) // إعادة إنشاء الجداول في قاعدة البيانات
     .then(() => console.log('Database & tables created!'))
     .catch(err => console.error('Error creating tables:', err));
-
-// بيانات وهمية للإعلانات والمتاجر
-const ads = [
-    { id: 1, title: "عرض خاص!", description: "احصل على خصم 20% في متجر A" },
-    { id: 2, title: "منتجات جديدة", description: "استعرض أحدث المنتجات في متجر B" },
-];
-
-const topStores = [
-    { id: 1, name: "متجر A", rating: 4.8 },
-    { id: 2, name: "متجر B", rating: 4.5 },
-];
-
-const storeDetails = {
-    1: { name: "متجر A", points: 120, offers: ["خصم 20% على الشراء القادم", "اشترِ واحدًا واحصل على الآخر مجانًا"] },
-    2: { name: "متجر B", points: 150, offers: ["شحن مجاني على الطلبات التي تزيد عن 50$", "استرجاع نقدي 10%"] },
-};
-
-// سجل وهمي لنقاط المستخدمين
-const pointsLog = {
-    1: [
-        { date: "2024-01-01", details: "إضافة 20 نقطة" },
-        { date: "2024-01-05", details: "استبدال 10 نقاط بخصم" },
-    ],
-    2: [
-        { date: "2024-01-02", details: "إضافة 30 نقطة" },
-        { date: "2024-01-06", details: "استبدال 20 نقطة بخصم" },
-    ],
-};
 
 // مسار API للتسجيل
 app.post('/auth/register', async (req, res) => {
@@ -77,14 +56,48 @@ app.post('/auth/login', async (req, res) => {
     try {
         const user = await User.findOne({ where: { email } });
 
-        if (user && await bcrypt.compare(password, user.password)) {
-            res.json({ message: "تم تسجيل الدخول بنجاح", user });
+        if (user) {
+            const isMatch = await bcrypt.compare(password, user.password);
+            console.log('Password match:', isMatch); // سجل نتيجة المقارنة
+
+            if (isMatch) {
+                console.log('Login successful for user:', user.username);
+                res.json({ message: "تم تسجيل الدخول بنجاح", user });
+            } else {
+                console.log('Login failed: Incorrect password');
+                res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
+            }
         } else {
+            console.log('Login failed: User not found');
             res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
         }
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ message: "حدث خطأ أثناء تسجيل الدخول" });
+    }
+});
+
+// مسار API لإضافة إعلان جديد بواسطة الإدارة
+app.post('/api/admin/ads', async (req, res) => {
+    const { title, description, storeId } = req.body;
+
+    try {
+        const ad = await Ad.create({ title, description, storeId });
+        res.json({ message: "تم إضافة الإعلان بنجاح", ad });
+    } catch (error) {
+        console.error('Error adding ad:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء إضافة الإعلان", error: error.message });
+    }
+});
+
+// مسار API للحصول على الإعلانات
+app.get('/api/ads', async (req, res) => {
+    try {
+        const ads = await Ad.findAll();
+        res.json(ads);
+    } catch (error) {
+        console.error('Error fetching ads:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء جلب الإعلانات", error: error.message });
     }
 });
 
@@ -147,7 +160,12 @@ app.get('/welcome', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'welcome.html'));
 });
 
-const PORT = process.env.PORT || 9004;
+// إضافة المسار لشاشة إدارة الإعلانات
+app.get('/admin', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
+const PORT = process.env.PORT || 9005;
 
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}/`);

@@ -3,6 +3,8 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const jwt = require('jsonwebtoken'); // إضافة JWT
+const { body, validationResult } = require('express-validator'); // إضافة express-validator
 const app = express();
 
 const sequelize = require('./config/database');
@@ -12,7 +14,7 @@ const Ad = require('./models/adModel'); // استيراد نموذج الإعل�
 const StoreRequest = require('./models/storeRequestModel'); // استيراد نموذج طلب المتجر
 
 const corsOptions = {
-    origin: 'http://localhost:9005', // استبدل هذا بالنطاق الصحيح إذا لزم الأمر
+    origin: 'http://localhost:9005', // استخدام المنفذ 9005
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true, // إذا كنت تستخدم الكوكيز
 };
@@ -30,12 +32,19 @@ app.use(express.static(path.join(__dirname, 'public')));
 sequelize.sync({ alter: true }) // تحديث الجداول بدلاً من إعادة إنشائها
     .then(() => console.log('Database & tables synced!'))
     .catch(err => console.error('Error syncing tables:', err));
+// مسار تسجيل المستخدمين
+app.post('/auth/register', [
+    body('username').isString().notEmpty().withMessage('يجب إدخال اسم المستخدم'),
+    body('email').isEmail().withMessage('البريد الإلكتروني غير صالح'),
+    body('phone').isString().notEmpty().withMessage('يجب إدخال رقم الهاتف'),
+    body('password').isLength({ min: 6 }).withMessage('يجب أن تكون كلمة المرور مكونة من 6 أحرف على الأقل')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
 
-// مسار API للتسجيل
-app.post('/auth/register', async (req, res) => {
     const { username, email, phone, password } = req.body;
-
-    console.log('Received registration request:', { username, email, phone, password }); // سجل التنقيح
 
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -43,119 +52,116 @@ app.post('/auth/register', async (req, res) => {
 
         const user = await User.create({ username, email, phone, password: hashedPassword, userNumber });
 
-        console.log('User created:', user); // سجل التنقيح
-
         res.json({ message: "تم التسجيل بنجاح", user });
     } catch (error) {
-        console.error('Error during registration:', error);
         res.status(500).json({ message: "حدث خطأ أثناء التسجيل", error: error.message });
     }
 });
 
-// مسار API لتسجيل الدخول
+// مسار تسجيل الدخول
 app.post('/auth/login', async (req, res) => {
     const { email, password } = req.body;
-
-    console.log('Received login request:', { email, password }); // سجل التنقيح
 
     try {
         const user = await User.findOne({ where: { email } });
 
         if (user) {
             const isMatch = await bcrypt.compare(password, user.password);
-            console.log('Password match:', isMatch); // سجل نتيجة المقارنة
 
             if (isMatch) {
-                console.log('Login successful for user:', user.username);
-                res.json({ message: "تم تسجيل الدخول بنجاح", user });
+                // توليد JWT
+                const token = jwt.sign({ id: user.id, email: user.email }, 'your_secret_key', { expiresIn: '1h' });
+                res.json({ message: "تم تسجيل الدخول بنجاح", token });
             } else {
-                console.log('Login failed: Incorrect password');
                 res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
             }
         } else {
-            console.log('Login failed: User not found');
             res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
         }
     } catch (error) {
-        console.error('Error during login:', error);
         res.status(500).json({ message: "حدث خطأ أثناء تسجيل الدخول" });
     }
 });
 
-// مسار API لإضافة إعلان جديد بواسطة الإدارة
+// ميدل وير للتحقق من JWT
+const authenticateJWT = (req, res, next) => {
+    const token = req.headers.authorization;
+
+    if (token) {
+        jwt.verify(token, 'your_secret_key', (err, user) => {
+            if (err) {
+                return res.sendStatus(403);
+            }
+            req.user = user;
+            next();
+        });
+    } else {
+        res.sendStatus(401);
+    }
+};
+
+// حماية المسارات الخاصة بالإدارة باستخدام JWT
+app.use('/api/admin', authenticateJWT);
+
+// مسار إضافة إعلان جديد بواسطة الإدارة
 app.post('/api/admin/ads', async (req, res) => {
     const { title, description, storeId } = req.body;
-
-    console.log('Received request to add ad:', { title, description, storeId }); // سجل التنقيح
 
     try {
         const ad = await Ad.create({ title, description, storeId });
 
-        console.log('Ad added:', ad); // سجل التنقيح
-
         res.json({ message: "تم إضافة الإعلان بنجاح", ad });
     } catch (error) {
-        console.error('Error adding ad:', error);
         res.status(500).json({ message: "حدث خطأ أثناء إضافة الإعلان", error: error.message });
     }
 });
 
-// مسار API للحصول على الإعلانات
+// مسار الحصول على الإعلانات
 app.get('/api/ads', async (req, res) => {
     try {
         const ads = await Ad.findAll();
         res.json(ads);
     } catch (error) {
-        console.error('Error fetching ads:', error);
         res.status(500).json({ message: "حدث خطأ أثناء جلب الإعلانات", error: error.message });
     }
 });
-
-// مسار API لإضافة متجر جديد بواسطة الإدارة
+// مسار إضافة متجر جديد بواسطة الإدارة
 app.post('/api/admin/stores', async (req, res) => {
     const { name, rating } = req.body;
-
-    console.log('Received request to add store:', { name, rating }); // سجل التنقيح
 
     try {
         const store = await Store.create({ name, rating });
 
-        console.log('Store added:', store); // سجل التنقيح
-
         res.json({ message: "تم إضافة المتجر بنجاح", store });
     } catch (error) {
-        console.error('Error adding store:', error);
         res.status(500).json({ message: "حدث خطأ أثناء إضافة المتجر", error: error.message });
     }
 });
-// مسار API لإرسال طلب فتح حساب متجر
+
+// مسار إرسال طلب فتح حساب متجر
 app.post('/api/store-requests', async (req, res) => {
     const { storeName, ownerName, email, phone } = req.body;
-
-    console.log('Received request to open store account:', { storeName, ownerName, email, phone }); // سجل التنقيح
 
     try {
         // حفظ الطلب في قاعدة البيانات
         const request = await StoreRequest.create({ storeName, ownerName, email, phone });
         res.json({ message: "تم إرسال الطلب بنجاح", request });
     } catch (error) {
-        console.error('Error submitting request:', error);
         res.status(500).json({ message: "حدث خطأ أثناء إرسال الطلب", error: error.message });
     }
 });
 
-// مسار API لجلب جميع طلبات فتح الحسابات
+// مسار جلب جميع طلبات فتح الحسابات
 app.get('/api/store-requests', async (req, res) => {
     try {
         const requests = await StoreRequest.findAll();
         res.json(requests);
     } catch (error) {
-        console.error('Error fetching store requests:', error);
         res.status(500).json({ message: "حدث خطأ أثناء جلب طلبات فتح الحسابات", error: error.message });
     }
 });
 
-// مسار API للموافقة على طلب فتح الحساب
+// مسار الموافقة على طلب فتح الحساب
 app.post('/api/store-requests/:id/approve', async (req, res) => {
     const requestId = req.params.id;
 
@@ -171,12 +177,11 @@ app.post('/api/store-requests/:id/approve', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على الطلب" });
         }
     } catch (error) {
-        console.error('Error approving store request:', error);
         res.status(500).json({ message: "حدث خطأ أثناء الموافقة على الطلب", error: error.message });
     }
 });
 
-// مسار API لرفض طلب فتح الحساب
+// مسار رفض طلب فتح الحساب
 app.post('/api/store-requests/:id/reject', async (req, res) => {
     const requestId = req.params.id;
 
@@ -190,12 +195,10 @@ app.post('/api/store-requests/:id/reject', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على الطلب" });
         }
     } catch (error) {
-        console.error('Error rejecting store request:', error);
         res.status(500).json({ message: "حدث خطأ أثناء رفض الطلب", error: error.message });
     }
 });
-
-// مسار API لتحديث معلومات المتجر
+// مسار تحديث معلومات المتجر
 app.put('/api/admin/stores/:id', async (req, res) => {
     const storeId = req.params.id;
     const { name, rating } = req.body;
@@ -212,12 +215,11 @@ app.put('/api/admin/stores/:id', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على المتجر" });
         }
     } catch (error) {
-        console.error('Error updating store:', error);
         res.status(500).json({ message: "حدث خطأ أثناء تحديث المتجر", error: error.message });
     }
 });
 
-// مسار API لحذف متجر
+// مسار حذف متجر
 app.delete('/api/admin/stores/:id', async (req, res) => {
     const storeId = req.params.id;
 
@@ -231,12 +233,11 @@ app.delete('/api/admin/stores/:id', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على المتجر" });
         }
     } catch (error) {
-        console.error('Error deleting store:', error);
         res.status(500).json({ message: "حدث خطأ أثناء حذف المتجر", error: error.message });
     }
 });
 
-// مسار API لحذف إعلان
+// مسار حذف إعلان
 app.delete('/api/admin/ads/:id', async (req, res) => {
     const adId = req.params.id;
 
@@ -250,12 +251,11 @@ app.delete('/api/admin/ads/:id', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على الإعلان" });
         }
     } catch (error) {
-        console.error('Error deleting ad:', error);
         res.status(500).json({ message: "حدث خطأ أثناء حذف الإعلان", error: error.message });
     }
 });
 
-// مسار API لعرض تفاصيل متجر معين
+// مسار عرض تفاصيل متجر معين
 app.get('/api/stores/:id', async (req, res) => {
     const storeId = req.params.id;
 
@@ -268,12 +268,10 @@ app.get('/api/stores/:id', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على المتجر" });
         }
     } catch (error) {
-        console.error('Error fetching store details:', error);
         res.status(500).json({ message: "حدث خطأ أثناء جلب تفاصيل المتجر", error: error.message });
     }
 });
-
-// مسار API لعرض سجل النقاط لمتجر معين
+// مسار عرض سجل النقاط لمتجر معين
 app.get('/api/stores/:id/points-log', async (req, res) => {
     const storeId = req.params.id;
 
@@ -286,12 +284,20 @@ app.get('/api/stores/:id/points-log', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على سجل النقاط" });
         }
     } catch (error) {
-        console.error('Error fetching points log:', error);
         res.status(500).json({ message: "حدث خطأ أثناء جلب سجل النقاط", error: error.message });
     }
 });
-// مسار API لإضافة النقاط للمستخدمين
-app.post('/api/store/:id/add-points', async (req, res) => {
+
+// مسار إضافة النقاط للمستخدمين مع التحقق من صحة البيانات
+app.post('/api/store/:id/add-points', [
+    body('userId').isString().notEmpty().withMessage('يجب إدخال معرف المستخدم'),
+    body('amount').isNumeric().notEmpty().withMessage('يجب إدخال مبلغ صحيح')
+], async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
     const storeId = req.params.id;
     const { userId, amount } = req.body;
 
@@ -307,7 +313,8 @@ app.post('/api/store/:id/add-points', async (req, res) => {
     res.json({ message: "تمت إضافة النقاط بنجاح", points });
 });
 
-// مسار API لتحديث بيانات المستخدم
+
+// مسار تحديث بيانات المستخدم
 app.put('/api/users/:id', async (req, res) => {
     const userId = req.params.id;
     const { username, email, phone } = req.body;
@@ -325,12 +332,11 @@ app.put('/api/users/:id', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على المستخدم" });
         }
     } catch (error) {
-        console.error('Error updating user:', error);
         res.status(500).json({ message: "حدث خطأ أثناء تحديث بيانات المستخدم", error: error.message });
     }
 });
 
-// مسار API لحذف مستخدم
+// مسار حذف مستخدم
 app.delete('/api/users/:id', async (req, res) => {
     const userId = req.params.id;
 
@@ -344,29 +350,25 @@ app.delete('/api/users/:id', async (req, res) => {
             res.status(404).json({ message: "لم يتم العثور على المستخدم" });
         }
     } catch (error) {
-        console.error('Error deleting user:', error);
         res.status(500).json({ message: "حدث خطأ أثناء حذف المستخدم", error: error.message });
     }
 });
-
-// مسار API لعرض جميع المتاجر
+// مسار عرض جميع المتاجر
 app.get('/api/stores', async (req, res) => {
     try {
         const stores = await Store.findAll();
         res.json(stores);
     } catch (error) {
-        console.error('Error fetching stores:', error);
         res.status(500).json({ message: "حدث خطأ أثناء جلب المتاجر", error: error.message });
     }
 });
 
-// مسار API لعرض جميع المستخدمين
+// مسار عرض جميع المستخدمين
 app.get('/api/users', async (req, res) => {
     try {
         const users = await User.findAll();
         res.json(users);
     } catch (error) {
-        console.error('Error fetching users:', error);
         res.status(500).json({ message: "حدث خطأ أثناء جلب المستخدمين", error: error.message });
     }
 });
@@ -374,38 +376,6 @@ app.get('/api/users', async (req, res) => {
 // إضافة المسار للصفحة الرئيسية
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// مسار API للحصول على الإعلانات
-app.get('/api/ads', (req, res) => {
-    res.json(ads);
-});
-
-// مسار API للحصول على المتاجر الأعلى تقييمًا
-app.get('/api/top-stores', (req, res) => {
-    res.json(topStores);
-});
-
-// مسار API لتفاصيل المتجر
-app.get('/api/store/:id', (req, res) => {
-    const storeId = req.params.id;
-    const store = storeDetails[storeId];
-    if (store) {
-        res.json(store);
-    } else {
-        res.status(404).json({ message: "لم يتم العثور على المتجر" });
-    }
-});
-
-// مسار API للحصول على سجل النقاط
-app.get('/api/store/:id/points-log', (req, res) => {
-    const storeId = req.params.id;
-    const log = pointsLog[storeId];
-    if (log) {
-        res.json(log);
-    } else {
-        res.status(404).json({ message: "لم يتم العثور على سجل النقاط" });
-    }
 });
 
 // إضافة المسارات لشاشات مختلفة

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تعزيز الأمان</title>
+    <link href="https://stackpath.bootstrap.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>تعزيز الأمان</h1>
+        <div class="section mt-4">
+            <h2>سجل العمليات</h2>
+            <div id="logs"></div>
+        </div>
+        <div class="section mt-4">
+            <h2>إعداد مصادقة ثنائية</h2>
+            <button class="btn btn-primary my-2" onclick="enable2FA()">تمكين المصادقة الثنائية</button>
+        </div>
+    </div>
+
+    <script>
+        function loadSecurityLogs() {
+            document.getElementById('logs').innerHTML = `
+                <div class="log-item border p-2 my-2">
+                    <p>تم تحديث العمولة بواسطة المدير في 2024-12-24 14:23</p>
+                    <p>تم حذف المستخدم بواسطة المشرف في 2024-12-24 14:30</p>
+                    <p>تمت إضافة إعلان بواسطة المدير في 2024-12-24 15:10</p>
+                </div>
+            `;
+        }
+
+        function enable2FA() {
+            alert("تم تمكين المصادقة الثنائية بنجاح!");
+        }
+
+        loadSecurityLogs();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrap.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

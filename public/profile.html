@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الحساب الشخصي</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container text-center mt-5">
+        <h1>الحساب الشخصي</h1>
+        <div class="profile-info mt-4">
+            <div class="profile-item">اسم المستخدم: <span id="user-name"></span></div>
+            <div class="profile-item">الرقم الفريد: <span id="unique-id"></span></div>
+            <div class="profile-item">رقم الجوال: <span id="phone"></span></div>
+        </div>
+        <button class="btn btn-primary mt-4" onclick="viewOrders()">عرض الطلبات</button>
+        <button class="btn btn-secondary mt-4" onclick="requestSupport()">طلب الدعم الفني</button>
+    </div>
+
+    <script>
+        function loadUserData() {
+            const userName = "testuser"; // استبدل هذا بالاسم الفعلي من النظام
+            const uniqueId = "12345678"; // استبدل هذا بالرقم الفريد الفعلي
+            const phone = "1234567890"; // استبدل هذا برقم الجوال الفعلي
+
+            document.getElementById('user-name').innerText = userName;
+            document.getElementById('unique-id').innerText = uniqueId;
+            document.getElementById('phone').innerText = phone;
+        }
+
+        function viewOrders() {
+            window.location.href = 'orders.html';
+        }
+
+        function requestSupport() {
+            window.location.href = 'support.html';
+        }
+
+        loadUserData();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

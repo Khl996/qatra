@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المتاجر</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>لوحة تحكم المتاجر</h1>
+        <div class="dashboard-section mt-4">
+            <h2>التقارير</h2>
+            <div id="reports"></div>
+        </div>
+        <div class="dashboard-section mt-4">
+            <h2>إضافة النقاط للعملاء</h2>
+            <input type="text" class="form-control my-2" placeholder="رقم الجوال أو الرقم الفريد" id="customer-id">
+            <input type="number" class="form-control my-2" placeholder="مبلغ الفاتورة" id="bill-amount">
+            <button class="btn btn-primary my-2" onclick="addPoints()">إضافة النقاط</button>
+        </div>
+        <div class="dashboard-section mt-4">
+            <h2>إدارة صفحة المتجر</h2>
+            <button class="btn btn-secondary my-2" onclick="manageStore()">إدارة الصفحة</button>
+        </div>
+        <div class="dashboard-section mt-4">
+            <h2>حساب المبالغ المستحقة</h2>
+            <div id="financial-summary"></div>
+        </div>
+    </div>
+
+    <script>
+        function loadDashboard() {
+            document.getElementById('reports').innerHTML = `
+                <p>مبيعات اليوم: 1000 ريال</p>
+                <p>عدد النقاط المضافة: 500 نقطة</p>
+            `;
+            document.getElementById('financial-summary').innerHTML = `
+                <p>إجمالي المبيعات الشهرية: 30000 ريال</p>
+                <p>المبلغ المستحق للتطبيق: 3000 ريال</p>
+                <p>حالة الدفع: مدفوع</p>
+            `;
+        }
+
+        async function addPoints() {
+            const customerId = document.getElementById('customer-id').value;
+            const billAmount = document.getElementById('bill-amount').value;
+
+            try {
+                const response = await fetch(`/api/store/add-points`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ userId: customerId, amount: billAmount })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تمت إضافة النقاط بنجاح!");
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء إضافة النقاط، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        function manageStore() {
+            window.location.href = 'manage_store.html';
+        }
+
+        loadDashboard();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.amazonaws.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الصفحة الرئيسية</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container text-center mt-5">
+        <div class="welcome-message">
+            مرحباً <span id="user-name"></span>، رقمك الفريد هو: <span id="unique-id"></span>
+        </div>
+        <div class="ad-board mt-4">
+            <h2>لوحة الإعلانات</h2>
+            <div id="ads"></div>
+        </div>
+        <div class="top-stores mt-4">
+            <h2>المتاجر الأعلى تقييمًا</h2>
+            <div id="top-stores">
+                <!-- أمثلة على المتاجر -->
+                <a href="store1.html" class="btn btn-info m-2">متجر 1</a>
+                <a href="store2.html" class="btn btn-info m-2">متجر 2</a>
+                <a href="store3.html" class="btn btn-info m-2">متجر 3</a>
+            </div>
+        </div>
+        <div class="all-stores mt-4">
+            <h2>جميع المتاجر</h2>
+            <div id="all-stores"></div>
+        </div>
+        <div class="footer-icons mt-4">
+            <a href="home.html" class="btn btn-secondary m-2">الصفحة الرئيسية</a>
+            <a href="profile.html" class="btn btn-secondary m-2">الحساب الشخصي</a>
+            <a href="explore.html" class="btn btn-secondary m-2">استكشاف جميع المتاجر</a>
+        </div>
+    </div>
+
+    <script>
+        function loadUserData() {
+            const userName = "testuser"; // استبدل هذا بالاسم الفعلي من النظام
+            const uniqueId = "12345678"; // استبدل هذا بالرقم الفريد الفعلي
+
+            document.getElementById('user-name').innerText = userName;
+            document.getElementById('unique-id').innerText = uniqueId;
+
+            // أمثلة على الإعلانات
+            const ads = [
+                "إعلان 1: خصم 50% في متجر 1",
+                "إعلان 2: عرض خاص في متجر 2"
+            ];
+            document.getElementById('ads').innerHTML = ads.map(ad => `<p>${ad}</p>`).join("");
+
+            // أمثلة على جميع المتاجر
+            const allStores = [
+                "متجر 1",
+                "متجر 2",
+                "متجر 3",
+                "متجر 4"
+            ];
+            document.getElementById('all-stores').innerHTML = allStores.map(store => `<p>${store}</p>`).join("");
+        }
+
+        loadUserData();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

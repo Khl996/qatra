@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استكشاف جميع المتاجر</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container text-center mt-5">
+        <h1>استكشاف جميع المتاجر</h1>
+        <input type="text" class="form-control my-2" placeholder="بحث عن المتاجر حسب الاسم" id="search">
+        <select class="form-control my-2" id="category">
+            <option value="">اختر تصنيف المتجر</option>
+            <option value="مطاعم">مطاعم</option>
+            <option value="مقاهي">مقاهي</option>
+            <option value="منشآت صحية">منشآت صحية</option>
+        </select>
+        <button class="btn btn-primary my-2" onclick="searchStores()">بحث</button>
+        <div class="store-list mt-4" id="store-list"></div>
+    </div>
+
+    <script>
+        async function searchStores() {
+            const searchValue = document.getElementById('search').value;
+            const categoryValue = document.getElementById('category').value;
+
+            try {
+                const response = await fetch(`/api/stores?search=${searchValue}&category=${categoryValue}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('store-list').innerHTML = data.map(store => `<p>${store.name}</p>`).join("");
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء البحث عن المتاجر، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التقارير المالية</title>
+    <link href="https://stackpath.bootstrap.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>التقارير المالية</h1>
+        <div class="section mt-4">
+            <h2>تقارير العمولة</h2>
+            <div id="commission-reports"></div>
+        </div>
+        <div class="section mt-4">
+            <h2>إحصائيات الإيرادات</h2>
+            <div id="revenue-stats"></div>
+        </div>
+    </div>
+
+    <script>
+        function loadFinancialReports() {
+            document.getElementById('commission-reports').innerHTML = `
+                <div class="financial-item border p-2 my-2">
+                    <p>إجمالي المبالغ المستحقة من المتاجر: 3000 ريال</p>
+                    <p>المتجر 1: 1000 ريال</p>
+                    <p>المتجر 2: 1500 ريال</p>
+                    <p>المتجر 3: 500 ريال</p>
+                </div>
+            `;
+            document.getElementById('revenue-stats').innerHTML = `
+                <div class="financial-item border p-2 my-2">
+                    <p>الإيرادات الشهرية الإجمالية: 10000 ريال</p>
+                    <p>إيرادات الشهر الماضي: 8000 ريال</p>
+                    <p>إيرادات الشهر الحالي: 12000 ريال</p>
+                </div>
+            `;
+        }
+
+        loadFinancialReports();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrap.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

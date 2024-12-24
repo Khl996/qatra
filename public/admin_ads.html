@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الإعلانات</title>
+    <link href="https://stackpath.bootstrap.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>إدارة الإعلانات</h1>
+        <div class="section mt-4">
+            <h2>إضافة إعلان</h2>
+            <input type="text" class="form-control my-2" placeholder="عنوان الإعلان" id="ad-title">
+            <input type="text" class="form-control my-2" placeholder="وصف الإعلان" id="ad-description">
+            <input type="text" class="form-control my-2" placeholder="رابط صورة الإعلان" id="ad-image">
+            <button class="btn btn-primary my-2" onclick="addAd()">إضافة الإعلان</button>
+        </div>
+        <div class="section mt-4">
+            <h2>قائمة الإعلانات</h2>
+            <div id="ad-list"></div>
+        </div>
+    </div>
+
+    <script>
+        async function addAd() {
+            const title = document.getElementById('ad-title').value;
+            const description = document.getElementById('ad-description').value;
+            const image = document.getElementById('ad-image').value;
+
+            try {
+                const response = await fetch('/api/admin/ads', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ title, description, image })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تمت إضافة الإعلان بنجاح!");
+                    loadAds();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء إضافة الإعلان، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        async function loadAds() {
+            try {
+                const response = await fetch('/api/admin/ads', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const adList = document.getElementById('ad-list');
+                    adList.innerHTML = data.map(ad => `
+                        <div class="ad-item border p-2 my-2">
+                            <p>العنوان: ${ad.title}</p>
+                            <p>الوصف: ${ad.description}</p>
+                            <img src="${ad.image}" alt="${ad.title}" class="img-fluid" style="width: 100px; height: 100px;">
+                            <button class="btn btn-danger m-2" onclick="deleteAd(${ad.id})">حذف</button>
+                        </div>
+                    `).join("");
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء تحميل الإعلانات، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        async function deleteAd(adId) {
+            try {
+                const response = await fetch(`/api/admin/ads/${adId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تم حذف الإعلان بنجاح!");
+                    loadAds();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء حذف الإعلان، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        loadAds();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrap.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

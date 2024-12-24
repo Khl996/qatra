@@ -1,406 +1,127 @@
 const express = require('express');
-const path = require('path');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
 const cors = require('cors');
-const jwt = require('jsonwebtoken'); // إضافة JWT
-const { body, validationResult } = require('express-validator'); // إضافة express-validator
+const path = require('path');
+
 const app = express();
 
-const sequelize = require('./config/database');
-const User = require('./models/userModel');
-const Store = require('./models/storeModel'); // استيراد نموذج المتجر
-const Ad = require('./models/adModel'); // استيراد نموذج الإعلان
-const StoreRequest = require('./models/storeRequestModel'); // استيراد نموذج طلب المتجر
-
-const corsOptions = {
-    origin: 'http://localhost:9005', // استخدام المنفذ 9005
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // إذا كنت تستخدم الكوكيز
-};
-
-app.use(cors(corsOptions)); // استخدام cors للسماح بالطلبات من نطاقات مختلفة
 app.use(bodyParser.json());
-
-// تعريف سجل النقاط الوهمي لتخزين نقاط المتاجر
-const pointsLog = {}; // أضف هذا السطر هنا
-
-// إعداد المسارات الثابتة لخدمة الملفات من مجلد 'public'
+app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// مزامنة الموديل مع قاعدة البيانات
-sequelize.sync({ alter: true }) // تحديث الجداول بدلاً من إعادة إنشائها
-    .then(() => console.log('Database & tables synced!'))
-    .catch(err => console.error('Error syncing tables:', err));
-// مسار تسجيل المستخدمين
-app.post('/auth/register', [
-    body('username').isString().notEmpty().withMessage('يجب إدخال اسم المستخدم'),
-    body('email').isEmail().withMessage('البريد الإلكتروني غير صالح'),
-    body('phone').isString().notEmpty().withMessage('يجب إدخال رقم الهاتف'),
-    body('password').isLength({ min: 6 }).withMessage('يجب أن تكون كلمة المرور مكونة من 6 أحرف على الأقل')
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
+// مسار تسجيل المستخدم الجديد
+app.post('/auth/register', (req, res) => {
     const { username, email, phone, password } = req.body;
-
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const userNumber = `user-${Date.now()}`;
-
-        const user = await User.create({ username, email, phone, password: hashedPassword, userNumber });
-
-        res.json({ message: "تم التسجيل بنجاح", user });
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء التسجيل", error: error.message });
-    }
+    // منطق التسجيل هنا
+    res.json({ message: 'تم التسجيل بنجاح!' });
 });
 
-// مسار تسجيل الدخول
-app.post('/auth/login', async (req, res) => {
+// مسار تسجيل دخول المستخدم
+app.post('/auth/login', (req, res) => {
     const { email, password } = req.body;
-
-    try {
-        const user = await User.findOne({ where: { email } });
-
-        if (user) {
-            const isMatch = await bcrypt.compare(password, user.password);
-
-            if (isMatch) {
-                // توليد JWT
-                const token = jwt.sign({ id: user.id, email: user.email }, 'your_secret_key', { expiresIn: '1h' });
-                res.json({ message: "تم تسجيل الدخول بنجاح", token });
-            } else {
-                res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
-            }
-        } else {
-            res.status(401).json({ message: "البريد الإلكتروني أو كلمة المرور غير صحيحة" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء تسجيل الدخول" });
-    }
+    // منطق تسجيل الدخول هنا
+    res.json({ token: 'sample-token' });
 });
 
-// ميدل وير للتحقق من JWT
-const authenticateJWT = (req, res, next) => {
-    const token = req.headers.authorization;
-
-    if (token) {
-        jwt.verify(token, 'your_secret_key', (err, user) => {
-            if (err) {
-                return res.sendStatus(403);
-            }
-            req.user = user;
-            next();
-        });
-    } else {
-        res.sendStatus(401);
-    }
-};
-
-// حماية المسارات الخاصة بالإدارة باستخدام JWT
-app.use('/api/admin', authenticateJWT);
-
-// مسار إضافة إعلان جديد بواسطة الإدارة
-app.post('/api/admin/ads', async (req, res) => {
-    const { title, description, storeId } = req.body;
-
-    try {
-        const ad = await Ad.create({ title, description, storeId });
-
-        res.json({ message: "تم إضافة الإعلان بنجاح", ad });
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء إضافة الإعلان", error: error.message });
-    }
+// مسار تسجيل دخول المتجر
+app.post('/auth/store-login', (req, res) => {
+    const { username, password } = req.body;
+    // منطق تسجيل الدخول هنا
+    res.json({ token: 'store-sample-token' });
 });
 
-// مسار الحصول على الإعلانات
-app.get('/api/ads', async (req, res) => {
-    try {
-        const ads = await Ad.findAll();
-        res.json(ads);
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء جلب الإعلانات", error: error.message });
-    }
-});
-// مسار إضافة متجر جديد بواسطة الإدارة
-app.post('/api/admin/stores', async (req, res) => {
-    const { name, rating } = req.body;
-
-    try {
-        const store = await Store.create({ name, rating });
-
-        res.json({ message: "تم إضافة المتجر بنجاح", store });
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء إضافة المتجر", error: error.message });
-    }
-});
-
-// مسار إرسال طلب فتح حساب متجر
-app.post('/api/store-requests', async (req, res) => {
-    const { storeName, ownerName, email, phone } = req.body;
-
-    try {
-        // حفظ الطلب في قاعدة البيانات
-        const request = await StoreRequest.create({ storeName, ownerName, email, phone });
-        res.json({ message: "تم إرسال الطلب بنجاح", request });
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء إرسال الطلب", error: error.message });
-    }
-});
-
-// مسار جلب جميع طلبات فتح الحسابات
-app.get('/api/store-requests', async (req, res) => {
-    try {
-        const requests = await StoreRequest.findAll();
-        res.json(requests);
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء جلب طلبات فتح الحسابات", error: error.message });
-    }
-});
-
-// مسار الموافقة على طلب فتح الحساب
-app.post('/api/store-requests/:id/approve', async (req, res) => {
-    const requestId = req.params.id;
-
-    try {
-        const request = await StoreRequest.findByPk(requestId);
-
-        if (request) {
-            // هنا يمكننا إنشاء متجر بناءً على بيانات الطلب
-            await Store.create({ name: request.storeName, rating: 0 });
-            await request.destroy();
-            res.json({ message: "تمت الموافقة على الطلب بنجاح" });
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على الطلب" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء الموافقة على الطلب", error: error.message });
-    }
-});
-
-// مسار رفض طلب فتح الحساب
-app.post('/api/store-requests/:id/reject', async (req, res) => {
-    const requestId = req.params.id;
-
-    try {
-        const request = await StoreRequest.findByPk(requestId);
-
-        if (request) {
-            await request.destroy();
-            res.json({ message: "تم رفض الطلب بنجاح" });
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على الطلب" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء رفض الطلب", error: error.message });
-    }
-});
-// مسار تحديث معلومات المتجر
-app.put('/api/admin/stores/:id', async (req, res) => {
-    const storeId = req.params.id;
-    const { name, rating } = req.body;
-
-    try {
-        const store = await Store.findByPk(storeId);
-
-        if (store) {
-            store.name = name || store.name;
-            store.rating = rating || store.rating;
-            await store.save();
-            res.json({ message: "تم تحديث معلومات المتجر بنجاح", store });
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على المتجر" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء تحديث المتجر", error: error.message });
-    }
-});
-
-// مسار حذف متجر
-app.delete('/api/admin/stores/:id', async (req, res) => {
-    const storeId = req.params.id;
-
-    try {
-        const store = await Store.findByPk(storeId);
-
-        if (store) {
-            await store.destroy();
-            res.json({ message: "تم حذف المتجر بنجاح" });
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على المتجر" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء حذف المتجر", error: error.message });
-    }
-});
-
-// مسار حذف إعلان
-app.delete('/api/admin/ads/:id', async (req, res) => {
-    const adId = req.params.id;
-
-    try {
-        const ad = await Ad.findByPk(adId);
-
-        if (ad) {
-            await ad.destroy();
-            res.json({ message: "تم حذف الإعلان بنجاح" });
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على الإعلان" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء حذف الإعلان", error: error.message });
-    }
-});
-
-// مسار عرض تفاصيل متجر معين
-app.get('/api/stores/:id', async (req, res) => {
-    const storeId = req.params.id;
-
-    try {
-        const store = await Store.findByPk(storeId);
-
-        if (store) {
-            res.json(store);
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على المتجر" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء جلب تفاصيل المتجر", error: error.message });
-    }
-});
-// مسار عرض سجل النقاط لمتجر معين
-app.get('/api/stores/:id/points-log', async (req, res) => {
-    const storeId = req.params.id;
-
-    try {
-        const log = pointsLog[storeId];
-
-        if (log) {
-            res.json(log);
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على سجل النقاط" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء جلب سجل النقاط", error: error.message });
-    }
-});
-
-// مسار إضافة النقاط للمستخدمين مع التحقق من صحة البيانات
-app.post('/api/store/:id/add-points', [
-    body('userId').isString().notEmpty().withMessage('يجب إدخال معرف المستخدم'),
-    body('amount').isNumeric().notEmpty().withMessage('يجب إدخال مبلغ صحيح')
-], async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const storeId = req.params.id;
-    const { userId, amount } = req.body;
-
-    // حساب النقاط (لنفترض 1 نقطة لكل 10 وحدات من المبلغ)
-    const points = Math.floor(amount / 10);
-
-    // تحديث السجل الوهمي (يمكن استبداله بالتحديث الحقيقي للقاعدة البيانات)
-    if (!pointsLog[storeId]) {
-        pointsLog[storeId] = [];
-    }
-    pointsLog[storeId].push({ date: new Date().toISOString(), details: `إضافة ${points} نقطة للمستخدم ${userId}` });
-
-    res.json({ message: "تمت إضافة النقاط بنجاح", points });
-});
-
-
-// مسار تحديث بيانات المستخدم
-app.put('/api/users/:id', async (req, res) => {
-    const userId = req.params.id;
-    const { username, email, phone } = req.body;
-
-    try {
-        const user = await User.findByPk(userId);
-
-        if (user) {
-            user.username = username || user.username;
-            user.email = email || user.email;
-            user.phone = phone || user.phone;
-            await user.save();
-            res.json({ message: "تم تحديث بيانات المستخدم بنجاح", user });
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على المستخدم" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء تحديث بيانات المستخدم", error: error.message });
-    }
+// مسار الحصول على قائمة المستخدمين
+app.get('/api/admin/users', (req, res) => {
+    // منطق الحصول على قائمة المستخدمين هنا
+    res.json([
+        { id: 1, username: 'user1', email: 'user1@example.com', phone: '1234567890', uniqueId: 'uid1' },
+        { id: 2, username: 'user2', email: 'user2@example.com', phone: '0987654321', uniqueId: 'uid2' }
+    ]);
 });
 
 // مسار حذف مستخدم
-app.delete('/api/users/:id', async (req, res) => {
-    const userId = req.params.id;
-
-    try {
-        const user = await User.findByPk(userId);
-
-        if (user) {
-            await user.destroy();
-            res.json({ message: "تم حذف المستخدم بنجاح" });
-        } else {
-            res.status(404).json({ message: "لم يتم العثور على المستخدم" });
-        }
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء حذف المستخدم", error: error.message });
-    }
-});
-// مسار عرض جميع المتاجر
-app.get('/api/stores', async (req, res) => {
-    try {
-        const stores = await Store.findAll();
-        res.json(stores);
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء جلب المتاجر", error: error.message });
-    }
+app.delete('/api/admin/users/:userId', (req, res) => {
+    const { userId } = req.params;
+    // منطق حذف المستخدم هنا
+    res.json({ message: `تم حذف المستخدم ${userId} بنجاح!` });
 });
 
-// مسار عرض جميع المستخدمين
-app.get('/api/users', async (req, res) => {
-    try {
-        const users = await User.findAll();
-        res.json(users);
-    } catch (error) {
-        res.status(500).json({ message: "حدث خطأ أثناء جلب المستخدمين", error: error.message });
-    }
+// مسار الحصول على قائمة المتاجر
+app.get('/api/admin/stores', (req, res) => {
+    // منطق الحصول على قائمة المتاجر هنا
+    res.json([
+        { id: 1, name: 'متجر 1', category: 'مطعم', description: 'وصف متجر 1' },
+        { id: 2, name: 'متجر 2', category: 'مقهى', description: 'وصف متجر 2' }
+    ]);
 });
 
-// إضافة المسار للصفحة الرئيسية
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// مسار حذف متجر
+app.delete('/api/admin/stores/:storeId', (req, res) => {
+    const { storeId } = req.params;
+    // منطق حذف المتجر هنا
+    res.json({ message: `تم حذف المتجر ${storeId} بنجاح!` });
 });
 
-// إضافة المسارات لشاشات مختلفة
-app.get('/welcome', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'welcome.html'));
+// مسار إنشاء كود الخصم
+app.post('/api/admin/discounts', (req, res) => {
+    const { code, description, expiry } = req.body;
+    // منطق إنشاء كود الخصم هنا
+    res.json({ message: 'تم إنشاء كود الخصم بنجاح!' });
 });
 
-app.get('/admin', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+// مسار الحصول على الأكواد
+app.get('/api/admin/discounts', (req, res) => {
+    // منطق الحصول على الأكواد هنا
+    res.json([
+        { id: 1, code: 'DISCOUNT1', description: 'خصم 10%', expiry: '2024-12-31' },
+        { id: 2, code: 'DISCOUNT2', description: 'خصم 20%', expiry: '2024-11-30' }
+    ]);
 });
 
-app.get('/request-store', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'requestStore.html'));
+// مسار حذف كود الخصم
+app.delete('/api/admin/discounts/:discountId', (req, res) => {
+    const { discountId } = req.params;
+    // منطق حذف كود الخصم هنا
+    res.json({ message: `تم حذف كود الخصم ${discountId} بنجاح!` });
 });
 
-app.get('/admin-panel', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'adminPanel.html'));
+// مسار إضافة إعلان
+app.post('/api/admin/ads', (req, res) => {
+    const { title, description, image } = req.body;
+    // منطق إضافة الإعلان هنا
+    res.json({ message: 'تمت إضافة الإعلان بنجاح!' });
 });
 
-app.get('/add-points', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'addPoints.html'));
+// مسار الحصول على الإعلانات
+app.get('/api/admin/ads', (req, res) => {
+    // منطق الحصول على الإعلانات هنا
+    res.json([
+        { id: 1, title: 'إعلان 1', description: 'وصف إعلان 1', image: 'https://example.com/ad1.jpg' },
+        { id: 2, title: 'إعلان 2', description: 'وصف إعلان 2', image: 'https://example.com/ad2.jpg' }
+    ]);
 });
 
-const PORT = process.env.PORT || 9005;
+// مسار حذف إعلان
+app.delete('/api/admin/ads/:adId', (req, res) => {
+    const { adId } = req.params;
+    // منطق حذف الإعلان هنا
+    res.json({ message: `تم حذف الإعلان ${adId} بنجاح!` });
+});
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}/`);
+// مسار الحصول على التقارير المالية
+app.get('/api/admin/reports', (req, res) => {
+    // منطق الحصول على التقارير المالية هنا
+    res.json({ message: 'التقارير المالية' });
+});
+
+// مسار إعداد مصادقة ثنائية
+app.post('/api/admin/settings/2fa', (req, res) => {
+    // منطق إعداد المصادقة الثنائية هنا
+    res.json({ message: 'تم تمكين المصادقة الثنائية بنجاح!' });
+});
+
+// بدء تشغيل الخادم
+const port = 3000;
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل جديد</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container text-center mt-5">
+        <h1>تسجيل جديد</h1>
+        <input type="text" class="form-control my-2" placeholder="الاسم" id="username">
+        <input type="email" class="form-control my-2" placeholder="البريد الإلكتروني" id="email">
+        <input type="text" class="form-control my-2" placeholder="رقم الجوال" id="phone">
+        <input type="password" class="form-control my-2" placeholder="كلمة المرور" id="password">
+        <input type="password" class="form-control my-2" placeholder="تأكيد كلمة المرور" id="confirm-password">
+        <button class="btn btn-primary my-2" onclick="register()">تسجيل</button>
+    </div>
+
+    <script>
+        async function register() {
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (password !== confirmPassword) {
+                alert("كلمة المرور وتأكيدها غير متطابقين");
+                return;
+            }
+
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, phone, password })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تم التسجيل بنجاح! تحقق من بريدك الإلكتروني أو رسالة نصية للحصول على رمز التحقق");
+                    window.location.href = 'login.html';
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء عملية التسجيل، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

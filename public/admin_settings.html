@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعدادات النظام</title>
+    <link href="https://stackpath.bootstrap.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>إعدادات النظام</h1>
+        <div class="section mt-4">
+            <h2>التحكم بنسب العمولات</h2>
+            <input type="number" class="form-control my-2" placeholder="نسبة العمولة الافتراضية" id="default-commission">
+            <button class="btn btn-primary my-2" onclick="updateCommission()">تحديث العمولة</button>
+        </div>
+        <div class="section mt-4">
+            <h2>الإعدادات العامة</h2>
+            <input type="text" class="form-control my-2" placeholder="الشعار الجديد" id="new-logo">
+            <button class="btn btn-secondary my-2" onclick="updateSettings()">تحديث الإعدادات</button>
+        </div>
+    </div>
+
+    <script>
+        async function updateCommission() {
+            const defaultCommission = document.getElementById('default-commission').value;
+
+            try {
+                const response = await fetch('/api/admin/settings/commission', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ commission: defaultCommission })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تم تحديث نسبة العمولة بنجاح!");
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء تحديث نسبة العمولة، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        async function updateSettings() {
+            const newLogo = document.getElementById('new-logo').value;
+
+            try {
+                const response = await fetch('/api/admin/settings/logo', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ logo: newLogo })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تم تحديث الإعدادات بنجاح!");
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء تحديث الإعدادات، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrap.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

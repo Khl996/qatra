@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الموظفين</title>
+    <link href="https://stackpath.bootstrap.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>إدارة الموظفين</h1>
+        <div class="section mt-4">
+            <input type="text" class="form-control my-2" placeholder="بحث عن الموظفين" id="search-staff">
+            <button class="btn btn-primary my-2" onclick="searchStaff()">بحث</button>
+        </div>
+        <div class="section mt-4">
+            <h2>قائمة الموظفين</h2>
+            <div id="staff-list"></div>
+        </div>
+    </div>
+
+    <script>
+        async function searchStaff() {
+            const searchValue = document.getElementById('search-staff').value;
+
+            try {
+                const response = await fetch(`/api/admin/staff?search=${searchValue}`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const staffList = document.getElementById('staff-list');
+                    staffList.innerHTML = data.map(staff => `
+                        <div class="staff-item border p-2 my-2">
+                            <p>الاسم: ${staff.name}</p>
+                            <p>البريد الإلكتروني: ${staff.email}</p>
+                            <p>رقم الجوال: ${staff.phone}</p>
+                            <button class="btn btn-secondary m-2" onclick="editStaff(${staff.id})">تعديل</button>
+                            <button class="btn btn-danger m-2" onclick="deleteStaff(${staff.id})">حذف</button>
+                        </div>
+                    `).join("");
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء البحث عن الموظفين، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        async function editStaff(staffId) {
+            window.location.href = `edit_staff.html?id=${staffId}`;
+        }
+
+        async function deleteStaff(staffId) {
+            try {
+                const response = await fetch(`/api/admin/staff/${staffId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تم حذف الموظف بنجاح!");
+                    searchStaff();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء حذف الموظف، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        searchStaff();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrap.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

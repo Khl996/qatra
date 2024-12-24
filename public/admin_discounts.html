@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة الأكواد والخصومات</title>
+    <link href="https://stackpath.bootstrap.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>إدارة الأكواد والخصومات</h1>
+        <div class="section mt-4">
+            <h2>إنشاء أكواد خصم</h2>
+            <input type="text" class="form-control my-2" placeholder="كود الخصم" id="discount-code">
+            <input type="text" class="form-control my-2" placeholder="وصف الخصم" id="discount-description">
+            <input type="date" class="form-control my-2" placeholder="تاريخ الانتهاء" id="discount-expiry">
+            <button class="btn btn-primary my-2" onclick="addDiscount()">إنشاء الكود</button>
+        </div>
+        <div class="section mt-4">
+            <h2>قائمة الأكواد</h2>
+            <div id="discount-list"></div>
+        </div>
+    </div>
+
+    <script>
+        async function addDiscount() {
+            const code = document.getElementById('discount-code').value;
+            const description = document.getElementById('discount-description').value;
+            const expiry = document.getElementById('discount-expiry').value;
+
+            try {
+                const response = await fetch('/api/admin/discounts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify({ code, description, expiry })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تم إنشاء كود الخصم بنجاح!");
+                    loadDiscounts();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء إنشاء كود الخصم، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        async function loadDiscounts() {
+            try {
+                const response = await fetch('/api/admin/discounts', {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    const discountList = document.getElementById('discount-list');
+                    discountList.innerHTML = data.map(discount => `
+                        <div class="discount-item border p-2 my-2">
+                            <p>الكود: ${discount.code}</p>
+                            <p>الوصف: ${discount.description}</p>
+                            <p>تاريخ الانتهاء: ${discount.expiry}</p>
+                            <button class="btn btn-danger m-2" onclick="deleteDiscount(${discount.id})">حذف</button>
+                        </div>
+                    `).join("");
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء تحميل الأكواد، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        async function deleteDiscount(discountId) {
+            try {
+                const response = await fetch(`/api/admin/discounts/${discountId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تم حذف كود الخصم بنجاح!");
+                    loadDiscounts();
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء حذف كود الخصم، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+
+        loadDiscounts();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrap.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

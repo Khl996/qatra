@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحليل البيانات</title>
+    <link href="https://stackpath.bootstrap.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>تحليل البيانات</h1>
+        <div class="section mt-4">
+            <h2>المتاجر الأكثر طلبًا</h2>
+            <div id="top-stores"></div>
+        </div>
+        <div class="section mt-4">
+            <h2>المدن الأكثر استخدامًا للتطبيق</h2>
+            <div id="top-cities"></div>
+        </div>
+        <div class="section mt-4">
+            <h2>أوقات الذروة لاستخدام التطبيق</h2>
+            <div id="peak-times"></div>
+        </div>
+    </div>
+
+    <script>
+        function loadAnalytics() {
+            document.getElementById('top-stores').innerHTML = `
+                <div class="analytics-item border p-2 my-2">
+                    <p>المتجر 1: 500 طلب</p>
+                    <p>المتجر 2: 400 طلب</p>
+                    <p>المتجر 3: 300 طلب</p>
+                </div>
+            `;
+            document.getElementById('top-cities').innerHTML = `
+                <div class="analytics-item border p-2 my-2">
+                    <p>المدينة 1: 1000 مستخدم</p>
+                    <p>المدينة 2: 800 مستخدم</p>
+                    <p>المدينة 3: 600 مستخدم</p>
+                </div>
+            `;
+            document.getElementById('peak-times').innerHTML = `
+                <div class="analytics-item border p-2 my-2">
+                    <p>الفترة الصباحية: 50% من الطلبات</p>
+                    <p>الفترة المسائية: 30% من الطلبات</p>
+                    <p>الفترة الليلية: 20% من الطلبات</p>
+                </div>
+            `;
+        }
+
+        loadAnalytics();
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrap.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

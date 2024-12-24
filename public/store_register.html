@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل متجر جديد</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container text-center mt-5">
+        <h1>تسجيل متجر جديد</h1>
+        <input type="text" class="form-control my-2" placeholder="اسم المسؤول" id="manager-name">
+        <input type="text" class="form-control my-2" placeholder="رقم جوال المسؤول" id="manager-phone">
+        <input type="email" class="form-control my-2" placeholder="البريد الإلكتروني" id="email">
+        <input type="text" class="form-control my-2" placeholder="وصف المتجر" id="store-description">
+        <select class="form-control my-2" id="store-category">
+            <option value="">اختر تصنيف المتجر</option>
+            <option value="مطعم">مطعم</option>
+            <option value="مقهى">مقهى</option>
+            <option value="منشأة صحية">منشأة صحية</option>
+        </select>
+        <button class="btn btn-primary my-2" onclick="registerStore()">تسجيل</button>
+    </div>
+
+    <script>
+        async function registerStore() {
+            const managerName = document.getElementById('manager-name').value;
+            const managerPhone = document.getElementById('manager-phone').value;
+            const email = document.getElementById('email').value;
+            const storeDescription = document.getElementById('store-description').value;
+            const storeCategory = document.getElementById('store-category').value;
+
+            try {
+                const response = await fetch('/api/store-requests', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ managerName, managerPhone, email, storeDescription, storeCategory })
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    alert("تم إرسال الطلب بنجاح! سيتم التواصل معك بعد المراجعة");
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                alert("حدث خطأ أثناء عملية التسجيل، يرجى المحاولة مرة أخرى لاحقاً");
+            }
+        }
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.amazonaws.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

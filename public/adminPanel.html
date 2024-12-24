@@ -6,107 +6,114 @@
     <title>لوحة تحكم المشرف</title>
 </head>
 <body>
-    <h1>طلبات فتح حسابات المتاجر</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>اسم المتجر</th>
-                <th>اسم صاحب المتجر</th>
-                <th>البريد الإلكتروني</th>
-                <th>رقم الجوال</th>
-                <th>الإجراءات</th>
-            </tr>
-        </thead>
-        <tbody id="requestsTableBody">
-        </tbody>
-    </table>
+    <h1>لوحة تحكم المشرف</h1>
+
+    <!-- نموذج تحديث بيانات المستخدم -->
+    <section>
+        <h2>تحديث بيانات المستخدم</h2>
+        <form id="updateUserForm">
+            <label for="userId">معرف المستخدم:</label>
+            <input type="text" id="userId" name="userId" required>
+            <br>
+            <label for="username">اسم المستخدم:</label>
+            <input type="text" id="username" name="username">
+            <br>
+            <label for="email">البريد الإلكتروني:</label>
+            <input type="email" id="email" name="email">
+            <br>
+            <label for="phone">رقم الهاتف:</label>
+            <input type="text" id="phone" name="phone">
+            <br>
+            <button type="submit">تحديث البيانات</button>
+        </form>
+    </section>
+
+    <!-- نموذج حذف مستخدم -->
+    <section>
+        <h2>حذف مستخدم</ه2>
+        <form id="deleteUserForm">
+            <label for="deleteUserId">معرف المستخدم:</label>
+            <input type="text" id="deleteUserId" name="deleteUserId" required>
+            <br>
+            <button type="submit">حذف المستخدم</button>
+        </form>
+    </section>
+
+    <!-- نموذج عرض جميع المتاجر -->
+    <section>
+        <h2>عرض جميع المتاجر</ه2>
+        <button id="viewAllStoresButton">عرض المتاجر</button>
+        <pre id="storesList"></pre>
+    </section>
+
+    <!-- نموذج عرض جميع المستخدمين -->
+    <section>
+        <h2>عرض جميع المستخدمين</ه2>
+        <button id="viewAllUsersButton">عرض المستخدمين</button>
+        <pre id="usersList"></pre>
+    </section>
 
     <script>
-        async function fetchRequests() {
+        // تحديث بيانات المستخدم
+        document.getElementById('updateUserForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const userId = document.getElementById('userId').value;
+            const data = {
+                username: document.getElementById('username').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value
+            };
             try {
-                const response = await fetch('http://localhost:9005/api/store-requests');
-                const requests = await response.json();
-
-                const tableBody = document.getElementById('requestsTableBody');
-                tableBody.innerHTML = '';
-
-                requests.forEach(request => {
-                    const row = document.createElement('tr');
-
-                    const storeNameCell = document.createElement('td');
-                    storeNameCell.textContent = request.storeName;
-                    row.appendChild(storeNameCell);
-
-                    const ownerNameCell = document.createElement('td');
-                    ownerNameCell.textContent = request.ownerName;
-                    row.appendChild(ownerNameCell);
-
-                    const emailCell = document.createElement('td');
-                    emailCell.textContent = request.email;
-                    row.appendChild(emailCell);
-
-                    const phoneCell = document.createElement('td');
-                    phoneCell.textContent = request.phone;
-                    row.appendChild(phoneCell);
-
-                    const actionsCell = document.createElement('td');
-                    const approveButton = document.createElement('button');
-                    approveButton.textContent = 'موافقة';
-                    approveButton.onclick = () => handleApproval(request.id);
-                    actionsCell.appendChild(approveButton);
-
-                    const rejectButton = document.createElement('button');
-                    rejectButton.textContent = 'رفض';
-                    rejectButton.onclick = () => handleRejection(request.id);
-                    actionsCell.appendChild(rejectButton);
-
-                    row.appendChild(actionsCell);
-
-                    tableBody.appendChild(row);
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
                 });
+                const result = await response.json();
+                alert(result.message);
             } catch (error) {
-                console.error('Error fetching requests:', error);
+                console.error('Error updating user:', error);
             }
-        }
+        });
 
-        async function handleApproval(requestId) {
+        // حذف مستخدم
+        document.getElementById('deleteUserForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            const userId = document.getElementById('deleteUserId').value;
             try {
-                const response = await fetch(`http://localhost:9005/api/store-requests/${requestId}/approve`, {
-                    method: 'POST'
+                const response = await fetch(`/api/users/${userId}`, {
+                    method: 'DELETE'
                 });
-
-                if (response.ok) {
-                    alert('تمت الموافقة على الطلب بنجاح!');
-                    fetchRequests();
-                } else {
-                    throw new Error('Failed to approve request');
-                }
+                const result = await response.json();
+                alert(result.message);
             } catch (error) {
-                console.error('Error approving request:', error);
-                alert('حدث خطأ أثناء الموافقة على الطلب.');
+                console.error('Error deleting user:', error);
             }
-        }
+        });
 
-        async function handleRejection(requestId) {
+        // عرض جميع المتاجر
+        document.getElementById('viewAllStoresButton').addEventListener('click', async function() {
             try {
-                const response = await fetch(`http://localhost:9005/api/store-requests/${requestId}/reject`, {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    alert('تم رفض الطلب بنجاح!');
-                    fetchRequests();
-                } else {
-                    throw new Error('Failed to reject request');
-                }
+                const response = await fetch('/api/stores');
+                const stores = await response.json();
+                document.getElementById('storesList').textContent = JSON.stringify(stores, null, 2);
             } catch (error) {
-                console.error('Error rejecting request:', error);
-                alert('حدث خطأ أثناء رفض الطلب.');
+                console.error('Error fetching stores:', error);
             }
-        }
+        });
 
-        // Fetch requests on page load
-        fetchRequests();
+        // عرض جميع المستخدمين
+        document.getElementById('viewAllUsersButton').addEventListener('click', async function() {
+            try {
+                const response = await fetch('/api/users');
+                const users = await response.json();
+                document.getElementById('usersList').textContent = JSON.stringify(users, null, 2);
+            } catch (error) {
+                console.error('Error fetching users:', error);
+            }
+        });
     </script>
 </body>
 </html>

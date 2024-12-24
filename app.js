@@ -195,6 +195,101 @@ app.post('/api/store-requests/:id/reject', async (req, res) => {
     }
 });
 
+// مسار API لتحديث معلومات المتجر
+app.put('/api/admin/stores/:id', async (req, res) => {
+    const storeId = req.params.id;
+    const { name, rating } = req.body;
+
+    try {
+        const store = await Store.findByPk(storeId);
+
+        if (store) {
+            store.name = name || store.name;
+            store.rating = rating || store.rating;
+            await store.save();
+            res.json({ message: "تم تحديث معلومات المتجر بنجاح", store });
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على المتجر" });
+        }
+    } catch (error) {
+        console.error('Error updating store:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء تحديث المتجر", error: error.message });
+    }
+});
+
+// مسار API لحذف متجر
+app.delete('/api/admin/stores/:id', async (req, res) => {
+    const storeId = req.params.id;
+
+    try {
+        const store = await Store.findByPk(storeId);
+
+        if (store) {
+            await store.destroy();
+            res.json({ message: "تم حذف المتجر بنجاح" });
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على المتجر" });
+        }
+    } catch (error) {
+        console.error('Error deleting store:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء حذف المتجر", error: error.message });
+    }
+});
+
+// مسار API لحذف إعلان
+app.delete('/api/admin/ads/:id', async (req, res) => {
+    const adId = req.params.id;
+
+    try {
+        const ad = await Ad.findByPk(adId);
+
+        if (ad) {
+            await ad.destroy();
+            res.json({ message: "تم حذف الإعلان بنجاح" });
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على الإعلان" });
+        }
+    } catch (error) {
+        console.error('Error deleting ad:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء حذف الإعلان", error: error.message });
+    }
+});
+
+// مسار API لعرض تفاصيل متجر معين
+app.get('/api/stores/:id', async (req, res) => {
+    const storeId = req.params.id;
+
+    try {
+        const store = await Store.findByPk(storeId);
+
+        if (store) {
+            res.json(store);
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على المتجر" });
+        }
+    } catch (error) {
+        console.error('Error fetching store details:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء جلب تفاصيل المتجر", error: error.message });
+    }
+});
+
+// مسار API لعرض سجل النقاط لمتجر معين
+app.get('/api/stores/:id/points-log', async (req, res) => {
+    const storeId = req.params.id;
+
+    try {
+        const log = pointsLog[storeId];
+
+        if (log) {
+            res.json(log);
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على سجل النقاط" });
+        }
+    } catch (error) {
+        console.error('Error fetching points log:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء جلب سجل النقاط", error: error.message });
+    }
+});
 // مسار API لإضافة النقاط للمستخدمين
 app.post('/api/store/:id/add-points', async (req, res) => {
     const storeId = req.params.id;
@@ -210,6 +305,70 @@ app.post('/api/store/:id/add-points', async (req, res) => {
     pointsLog[storeId].push({ date: new Date().toISOString(), details: `إضافة ${points} نقطة للمستخدم ${userId}` });
 
     res.json({ message: "تمت إضافة النقاط بنجاح", points });
+});
+
+// مسار API لتحديث بيانات المستخدم
+app.put('/api/users/:id', async (req, res) => {
+    const userId = req.params.id;
+    const { username, email, phone } = req.body;
+
+    try {
+        const user = await User.findByPk(userId);
+
+        if (user) {
+            user.username = username || user.username;
+            user.email = email || user.email;
+            user.phone = phone || user.phone;
+            await user.save();
+            res.json({ message: "تم تحديث بيانات المستخدم بنجاح", user });
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على المستخدم" });
+        }
+    } catch (error) {
+        console.error('Error updating user:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء تحديث بيانات المستخدم", error: error.message });
+    }
+});
+
+// مسار API لحذف مستخدم
+app.delete('/api/users/:id', async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+        const user = await User.findByPk(userId);
+
+        if (user) {
+            await user.destroy();
+            res.json({ message: "تم حذف المستخدم بنجاح" });
+        } else {
+            res.status(404).json({ message: "لم يتم العثور على المستخدم" });
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء حذف المستخدم", error: error.message });
+    }
+});
+
+// مسار API لعرض جميع المتاجر
+app.get('/api/stores', async (req, res) => {
+    try {
+        const stores = await Store.findAll();
+        res.json(stores);
+    } catch (error) {
+        console.error('Error fetching stores:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء جلب المتاجر", error: error.message });
+    }
+});
+
+// مسار API لعرض جميع المستخدمين
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await User.findAll();
+        res.json(users);
+    } catch (error) {
+        console.error('Error fetching users:', error);
+        res.status(500).json({ message: "حدث خطأ أثناء جلب المستخدمين", error: error.message });
+    }
 });
 
 // إضافة المسار للصفحة الرئيسية

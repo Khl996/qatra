@@ -1,5 +1,5 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const { sequelize } = require('../config/database');
 
 const Store = sequelize.define('Store', {
     id: {
@@ -18,7 +18,6 @@ const Store = sequelize.define('Store', {
     phone: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
     },
     email: {
         type: DataTypes.STRING,
@@ -28,16 +27,20 @@ const Store = sequelize.define('Store', {
             isEmail: true,
         },
     },
+    password: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    },
     description: {
-        type: DataTypes.TEXT,
-        allowNull: true,
+        type: DataTypes.STRING,
     },
     category: {
         type: DataTypes.STRING,
         allowNull: false,
     },
     status: {
-        type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+        type: DataTypes.STRING,
+        allowNull: false,
         defaultValue: 'pending',
     },
 }, {

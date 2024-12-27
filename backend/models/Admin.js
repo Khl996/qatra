@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database'); // تأكد من استيراد sequelize بشكل صحيح
+const { sequelize } = require('../config/database');
 
-const User = sequelize.define('User', {
+const Admin = sequelize.define('Admin', {
     id: {
         type: DataTypes.INTEGER,
         autoIncrement: true,
@@ -20,23 +20,16 @@ const User = sequelize.define('User', {
             isEmail: true,
         },
     },
-    phone: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-    },
     password: {
         type: DataTypes.STRING,
         allowNull: false,
     },
-    userNumber: {
+    role: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
-        defaultValue: () => Math.floor(10000000 + Math.random() * 90000000).toString(),
     },
 }, {
     timestamps: true,
 });
 
-module.exports = User;
+module.exports = Admin;

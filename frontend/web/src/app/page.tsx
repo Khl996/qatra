@@ -1,60 +1,40 @@
-"use client"; // إضافة التوجيه لجعل المكون مكون عميل
+'use client';
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Container, Button, Typography, Box } from '@mui/material';
+import { useRouter } from 'next/navigation';
 
-const Home: React.FC = () => {
+export default function Home() {
+  const router = useRouter();
+
   return (
-    <div>
-      <h1>Welcome to Qatra</h1>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/store-signup">Store Sign Up</Link>
-          </li>
-          <li>
-            <Link to="/store-login">Store Login</Link>
-          </li>
-          <li>
-            <Link to="/store-dashboard">Store Dashboard</Link>
-          </li>
-          <li>
-            <Link to="/add-points">Add Points</Link>
-          </li>
-          <li>
-            <Link to="/manage-offers">Manage Offers</Link>
-          </li>
-          <li>
-            <Link to="/manage-products">Manage Products</Link>
-          </li>
-          <li>
-            <Link to="/sales-reports">Sales Reports</Link>
-          </li>
-          <li>
-            <Link to="/commission">Commission</Link>
-          </li>
-          <li>
-            <Link to="/admin-login">Admin Login</Link>
-          </li>
-          <li>
-            <Link to="/user-management">User Management</Link>
-          </li>
-          <li>
-            <Link to="/store-management">Store Management</Link>
-          </li>
-          <li>
-            <Link to="/ad-management">Ad Management</Link>
-          </li>
-          <li>
-            <Link to="/discount-management">Discount Management</Link>
-          </li>
-          <li>
-            <Link to="/financial-reports">Financial Reports</Link>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    <Container maxWidth="sm">
+      <Box sx={{ mt: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Typography variant="h3" component="h1" gutterBottom align="center">
+          نظام قطرة
+        </Typography>
+        <Typography variant="h5" component="h2" gutterBottom align="center" color="textSecondary">
+          نظام إدارة نقاط الولاء للمتاجر
+        </Typography>
+        <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+          <Button 
+            variant="contained" 
+            color="primary"
+            size="large"
+            onClick={() => router.push('/admin/login')}
+          >
+            دخول المسؤول
+          </Button>
+          <Button 
+            variant="contained"
+            color="secondary"
+            size="large"
+            onClick={() => router.push('/store/login')}
+          >
+            دخول المتجر
+          </Button>
+        </Box>
+      </Box>
+    </Container>
   );
-};
-
-export default Home;
+}

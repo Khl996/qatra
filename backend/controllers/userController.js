@@ -2,52 +2,130 @@
 // المسار: backend/controllers/userController.js
 
 const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+const { generateUniqueCode, formatPhoneNumber } = require('../utils/helpers');
 
-exports.getUserProfile = async (req, res) => {
-    const { userId } = req.params;
+const userController = {
+    register: async (req, res) => {
+        try {
+            const { name, email, phone, password } = req.body;
+            const hashedPassword = await bcrypt.hash(password, 10);
+            const uniqueCode = await generateUniqueCode();
+            
+            const user = await User.create({
+                name,
+                email,
+                phone,
+                password: hashedPassword,
+                uniqueCode
+            });
 
-    try {
-        const user = await User.findByPk(userId);
+            const token = jwt.sign(
+                { id: user.id, role: user.role },
+                process.env.JWT_SECRET,
+                { expiresIn: '1h' }
+            );
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(201).json({ user, token });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
         }
+    },
 
-        res.status(200).json({ message: 'User profile retrieved successfully', user });
-    } catch (error) {
-        res.status(500).json({ message: 'Error retrieving user profile', error: error.message });
-    }
-};
-
-exports.updateUserProfile = async (req, res) => {
-    const { userId } = req.params;
-    const { name, email, phone } = req.body;
-
-    try {
-        const user = await User.findByPk(userId);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+    getProfile: async (req, res) => {
+        try {
+            const user = await User.findByPk(req.user.id);
+            res.json(user);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
         }
+    },
 
-        user.name = name || user.name;
-        user.email = email || user.email;
-        user.phone = phone || user.phone;
-        await user.save();
+    updateProfile: async (req, res) => {
+        try {
+            const user = await User.findByPk(req.user.id);
+            await user.update(req.body);
+            res.json(user);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
 
-        res.status(200).json({ message: 'User profile updated successfully', user });
-    } catch (error) {
-        res.status(500).json({ message: 'Error updating user profile', error: error.message });
+    getUserPoints: async (req, res) => {
+        try {
+            const points = await Point.findAll({
+                where: { userId: req.user.id },
+                include: [{ model: Store, as: 'store' }]
+            });
+            res.json(points);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    login: async (req, res) => {
+        try {
+            const { phone, password } = req.body;
+            const user = await User.findOne({ 
+                where: { phone: formatPhoneNumber(phone) } 
+            });
+
+            if (!user) {
+                return res.status(404).json({ message: 'المستخدم غير موجود' });
+            }
+
+            const isValidPassword = await bcrypt.compare(password, user.password);
+            if (!isValidPassword) {
+                return res.status(401).json({ message: 'كلمة المرور غير صحيحة' });
+            }
+
+            const token = jwt.sign(
+                { id: user.id, role: user.role },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+
+            res.json({ token, user: { id: user.id, name: user.name } });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    forgotPassword: async (req, res) => {
+        try {
+            const { phone } = req.body;
+            const user = await User.findOne({ 
+                where: { phone: formatPhoneNumber(phone) } 
+            });
+
+            if (!user) {
+                return res.status(404).json({ message: 'المستخدم غير موجود' });
+            }
+
+            // هنا يمكن إضافة منطق إرسال رمز التحقق عبر SMS
+            const verificationCode = Math.floor(100000 + Math.random() * 900000);
+            
+            // تخزين الرمز مؤقتاً (يمكن استخدام Redis هنا)
+            // await setVerificationCode(phone, verificationCode);
+
+            res.json({ message: 'تم إرسال رمز التحقق' });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    getUserPurchases: async (req, res) => {
+        try {
+            const purchases = await Purchase.findAll({
+                where: { userId: req.user.id },
+                include: [{ model: Store, as: 'store' }]
+            });
+            res.json(purchases);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
     }
 };
 
-exports.getUserPurchaseHistory = async (req, res) => {
-    const { userId } = req.params;
-
-    try {
-        // إضافة منطق استخراج سجل المشتريات عند توفر الجدول المناسب
-        res.status(200).json({ message: 'User purchase history retrieved successfully', history: [] });
-    } catch (error) {
-        res.status(500).json({ message: 'Error retrieving user purchase history', error: error.message });
-    }
-};
+module.exports = userController;

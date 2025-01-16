@@ -1,31 +1,31 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import auth from '../services/auth';
 import type { User } from '../types';
 
-export function useAuth() {
-  const [loading, setLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+export const useAuth = () => {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+    useEffect(() => {
+        const checkAuth = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No token found');
+                }
+                setIsAuthenticated(true);
+            } catch (error) {
+                setIsAuthenticated(false);
+                router.push('/login');
+            } finally {
+                setIsLoading(false);
+            }
+        };
 
-  const checkAuth = async () => {
-    try {
-      const isValid = await auth.isAuthenticated();
-      setIsAuthenticated(isValid);
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        checkAuth();
+    }, [router]);
 
-  return {
-    loading,
-    isAuthenticated,
-    user,
-    checkAuth
-  };
-}
+    return { isAuthenticated, isLoading };
+};

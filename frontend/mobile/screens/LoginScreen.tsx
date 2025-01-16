@@ -5,48 +5,30 @@ import {
   TextInput,
   StyleSheet,
   SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
+  Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
-import type { StackScreenProps } from '@react-navigation/stack';
-import type { RootStackParamList } from '../../shared/types/navigation';
 import Button from '../../shared/components/Button';
-import api from '@shared/api/config';
+import api from '../../shared/api/config';
 
-type Props = StackScreenProps<RootStackParamList, 'Login'>;
-
-const LoginScreen: React.FC<Props> = ({ navigation }) => {
+const LoginScreen = ({ navigation }) => {
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
 
   const handleLogin = async () => {
     try {
-      const response = await api.post('/auth/login', {
-        phone,
-        password,
-      });
-      
+      const response = await api.post('/auth/login', { phone, password });
       if (response.data.token) {
-        await AsyncStorage.setItem('qatra_token', response.data.token);
-        navigation.replace('Home');
+        navigation.replace('Main');
       }
-    } catch (err) {
-      setError('خطأ في تسجيل الدخول. الرجاء التحقق من البيانات المدخلة.');
+    } catch (error) {
+      Alert.alert('خطأ', 'فشل تسجيل الدخول');
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.content}
-      >
-        <Text style={styles.title}>مرحباً بك في قطرة</Text>
-        
-        {error && <Text style={styles.error}>{error}</Text>}
+      <View style={styles.form}>
+        <Text style={styles.title}>تسجيل الدخول</Text>
         
         <TextInput
           style={styles.input}
@@ -54,30 +36,27 @@ const LoginScreen: React.FC<Props> = ({ navigation }) => {
           value={phone}
           onChangeText={setPhone}
           keyboardType="phone-pad"
-          textAlign="right"
         />
-        
+
         <TextInput
           style={styles.input}
           placeholder="كلمة المرور"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          textAlign="right"
         />
-        
+
         <Button
-          title="تسجيل الدخول"
+          title="دخول"
           onPress={handleLogin}
-          variant="primary"
         />
-        
+
         <Button
           title="إنشاء حساب جديد"
-          onPress={() => navigation.navigate('SignUp')}
           variant="secondary"
+          onPress={() => navigation.navigate('SignUp')}
         />
-      </KeyboardAvoidingView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -87,16 +66,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  content: {
-    flex: 1,
+  form: {
     padding: 20,
-    justifyContent: 'center',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
   },
   input: {
     height: 50,
@@ -105,12 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 15,
     marginBottom: 15,
-    fontSize: 16,
-  },
-  error: {
-    color: 'red',
-    textAlign: 'center',
-    marginBottom: 15,
+    textAlign: 'right',
   },
 });
 

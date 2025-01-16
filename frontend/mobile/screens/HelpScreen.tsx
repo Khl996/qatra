@@ -1,122 +1,73 @@
 import React from 'react';
-import {
-  View,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Linking,
-  Text
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
 
-const HelpScreen: React.FC = () => {
-  const helpSections = [
+export default function HelpScreen() {
+  const helpItems = [
     {
-      title: 'كيف يعمل نظام النقاط؟',
-      content: 'تحصل على نقاط عند كل عملية شراء من المتاجر المشاركة. يمكنك استبدال هذه النقاط بعروض وخصومات حصرية.'
+      title: 'كيف يمكنني كسب النقاط؟',
+      content: 'يمكنك كسب النقاط عن طريق الشراء من المتاجر المشاركة في البرنامج.',
+      icon: 'star-outline'
     },
     {
-      title: 'كيفية استبدال النقاط',
-      content: 'اختر العرض المناسب من قائمة العروض المتاحة، تأكد من امتلاكك للنقاط الكافية، ثم اضغط على زر الاستبدال.'
-    },
-    {
-      title: 'المتاجر المشاركة',
-      content: 'يمكنك رؤية جميع المتاجر المشاركة في التطبيق من خلال خريطة المتاجر أو البحث باستخدام اسم المتجر.'
+      title: 'كيف أستخدم نقاطي؟',
+      content: 'يمكنك استخدام نقاطك للحصول على خصومات في المتاجر المشاركة.',
+      icon: 'gift-outline'
     }
   ];
 
-  const contactSupport = () => {
-    Linking.openURL('mailto:support@qatra.com');
-  };
-
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>مركز المساعدة</Text>
-      </View>
-
-      {helpSections.map((section, index) => (
-        <View key={index} style={styles.section}>
-          <Text style={styles.sectionTitle}>{section.title}</Text>
-          <Text style={styles.sectionContent}>{section.content}</Text>
+      {helpItems.map((item, index) => (
+        <View key={index} style={styles.card}>
+          <Icon name={item.icon} size={24} color="#007AFF" />
+          <Text style={styles.title}>{item.title}</Text>
+          <Text style={styles.content}>{item.content}</Text>
         </View>
       ))}
-
-      <TouchableOpacity style={styles.supportButton} onPress={contactSupport}>
-        <Text style={styles.supportButtonText}>تواصل مع الدعم الفني</Text>
+      
+      <TouchableOpacity 
+        style={styles.supportButton}
+        onPress={() => Linking.openURL('https://qatra-app.com/support')}
+      >
+        <Text style={styles.supportButtonText}>تواصل مع الدعم</Text>
       </TouchableOpacity>
-
-      <View style={styles.contactInfo}>
-        <Text style={styles.contactTitle}>معلومات الاتصال</Text>
-        <Text style={styles.contactText}>البريد الإلكتروني: support@qatra.com</Text>
-        <Text style={styles.contactText}>رقم الهاتف: 920000000</Text>
-        <Text style={styles.contactText}>ساعات العمل: 9 صباحاً - 5 مساءً</Text>
-      </View>
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#007AFF',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'right',
-  },
-  section: {
     padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
-  sectionTitle: {
+  card: {
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'flex-end',
+  },
+  title: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'right',
+    marginVertical: 8,
   },
-  sectionContent: {
-    fontSize: 16,
+  content: {
     color: '#666',
-    lineHeight: 24,
+    lineHeight: 20,
     textAlign: 'right',
   },
   supportButton: {
-    margin: 16,
-    padding: 16,
     backgroundColor: '#007AFF',
+    padding: 16,
     borderRadius: 8,
-    alignItems: 'center',
+    marginTop: 20,
   },
   supportButtonText: {
     color: '#fff',
-    fontSize: 16,
+    textAlign: 'center',
     fontWeight: 'bold',
-  },
-  contactInfo: {
-    padding: 16,
-    backgroundColor: '#f5f5f5',
-    margin: 16,
-    borderRadius: 8,
-  },
-  contactTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'right',
-  },
-  contactText: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 8,
-    textAlign: 'right',
-  },
+  }
 });
-
-export default HelpScreen;

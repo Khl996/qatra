@@ -2,23 +2,26 @@ import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
   StyleSheet,
   Switch,
   Alert,
-  TouchableOpacity,
+  ScrollView
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { StackScreenProps } from '@react-navigation/stack';
-import { RootStackParamList } from '../../shared/types/navigation';
-import api from '../../shared/api/config';
+import Button from '../../shared/components/Button';
 
-type Props = StackScreenProps<RootStackParamList, 'Settings'>;
+interface Settings {
+  notifications: boolean;
+  location: boolean;
+  darkMode: boolean;
+}
 
-const SettingsScreen: React.FC<Props> = ({ navigation }) => {
-  const [notifications, setNotifications] = useState(true);
-  const [locationServices, setLocationServices] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
+const SettingsScreen: React.FC = () => {
+  const [settings, setSettings] = useState<Settings>({
+    notifications: true,
+    location: true,
+    darkMode: false,
+  });
 
   useEffect(() => {
     loadSettings();
@@ -26,53 +29,23 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
 
   const loadSettings = async () => {
     try {
-      const settings = await AsyncStorage.getItem('userSettings');
-      if (settings) {
-        const parsedSettings = JSON.parse(settings);
-        setNotifications(parsedSettings.notifications);
-        setLocationServices(parsedSettings.locationServices);
-        setDarkMode(parsedSettings.darkMode);
+      const savedSettings = await AsyncStorage.getItem('settings');
+      if (savedSettings) {
+        setSettings(JSON.parse(savedSettings));
       }
     } catch (error) {
       console.error('Error loading settings:', error);
     }
   };
 
-  const saveSettings = async (key: string, value: boolean) => {
+  const updateSetting = async (key: keyof Settings, value: boolean) => {
     try {
-      const settings = await AsyncStorage.getItem('userSettings');
-      const currentSettings = settings ? JSON.parse(settings) : {};
-      const newSettings = { ...currentSettings, [key]: value };
-      await AsyncStorage.setItem('userSettings', JSON.stringify(newSettings));
+      const newSettings = { ...settings, [key]: value };
+      await AsyncStorage.setItem('settings', JSON.stringify(newSettings));
+      setSettings(newSettings);
     } catch (error) {
       console.error('Error saving settings:', error);
     }
-  };
-
-  const handleDeleteAccount = () => {
-    Alert.alert(
-      'حذف الحساب',
-      'هل أنت متأكد من رغبتك في حذف حسابك؟ هذا الإجراء لا يمكن التراجع عنه.',
-      [
-        { text: 'إلغاء', style: 'cancel' },
-        { 
-          text: 'حذف',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await api.delete('/user/account');
-              await AsyncStorage.clear();
-              navigation.reset({
-                index: 0,
-                routes: [{ name: 'Login' }],
-              });
-            } catch (error) {
-              Alert.alert('خطأ', 'حدث خطأ أثناء محاولة حذف الحساب');
-            }
-          }
-        }
-      ]
-    );
   };
 
   return (
@@ -83,45 +56,31 @@ const SettingsScreen: React.FC<Props> = ({ navigation }) => {
         <View style={styles.settingItem}>
           <Text style={styles.settingLabel}>تفعيل الإشعارات</Text>
           <Switch
-            value={notifications}
-            onValueChange={(value) => {
-              setNotifications(value);
-              saveSettings('notifications', value);
-            }}
+            value={settings.notifications}
+            onValueChange={(value) => updateSetting('notifications', value)}
           />
         </View>
 
         <View style={styles.settingItem}>
           <Text style={styles.settingLabel}>خدمات الموقع</Text>
           <Switch
-            value={locationServices}
-            onValueChange={(value) => {
-              setLocationServices(value);
-              saveSettings('locationServices', value);
-            }}
+            value={settings.location}
+            onValueChange={(value) => updateSetting('location', value)}
           />
         </View>
 
         <View style={styles.settingItem}>
           <Text style={styles.settingLabel}>الوضع الليلي</Text>
           <Switch
-            value={darkMode}
-            onValueChange={(value) => {
-              setDarkMode(value);
-              saveSettings('darkMode', value);
-            }}
+            value={settings.darkMode}
+            onValueChange={(value) => updateSetting('darkMode', value)}
           />
         </View>
       </View>
 
-      <View style={styles.dangerZone}>
-        <Text style={styles.dangerTitle}>منطقة الخطر</Text>
-        <TouchableOpacity
-          style={styles.deleteButton}
-          onPress={handleDeleteAccount}
-        >
-          <Text style={styles.deleteButtonText}>حذف الحساب</Text>
-        </TouchableOpacity>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>معلومات التطبيق</Text>
+        <Text style={styles.version}>الإصدار 1.0.0</Text>
       </View>
     </ScrollView>
   );
@@ -153,27 +112,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  dangerZone: {
-    padding: 16,
-    marginTop: 20,
-  },
-  dangerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#d32f2f',
-    marginBottom: 16,
+  version: {
+    fontSize: 14,
+    color: '#666',
     textAlign: 'right',
-  },
-  deleteButton: {
-    backgroundColor: '#ffebee',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#d32f2f',
-    fontSize: 16,
-    fontWeight: 'bold',
   },
 });
 

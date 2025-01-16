@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "قطرة",
-    "slug": "qatra-mobile",
+    "name": "Qatra",
+    "slug": "qatra-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,30 +11,31 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.qatra.mobile"
+      "bundleIdentifier": "com.yourcompany.qatra"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#ffffff"
       },
-      "package": "com.qatra.mobile"
+      "package": "com.yourcompany.qatra"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "السماح للتطبيق باستخدام موقعك لعرض المتاجر القريبة"
-        }
-      ]
-    ]
+      "expo-router"
+    ],
+    "experiments": {
+      "tsconfigPaths": true,
+      "typedRoutes": true
+    },
+    "newArchEnabled": true,
+    "scheme": "qatra"
   }
 }

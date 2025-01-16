@@ -2,10 +2,7 @@
 // المسار: backend/config/database.js
 
 const { Sequelize } = require('sequelize');
-const dotenv = require('dotenv');
-
-// تحميل متغيرات البيئة من .env
-dotenv.config();
+require('dotenv').config();
 
 // التحقق من المتغيرات البيئية
 if (!process.env.DB_NAME || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_HOST) {
@@ -19,25 +16,23 @@ if (!process.env.DB_NAME || !process.env.DB_USER || !process.env.DB_PASSWORD || 
 }
 
 // إنشاء اتصال قاعدة البيانات باستخدام المتغيرات البيئية
-const sequelize = new Sequelize(
-    process.env.DB_NAME, // اسم قاعدة البيانات
-    process.env.DB_USER, // اسم المستخدم
-    process.env.DB_PASSWORD, // كلمة المرور
-    {
-        host: process.env.DB_HOST, // عنوان المضيف
-        dialect: 'postgres', // نوع قاعدة البيانات
-        logging: false, // تعطيل تسجيل الاستعلامات
-    }
-);
+const sequelize = new Sequelize({
+    database: process.env.DB_NAME,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    host: process.env.DB_HOST,
+    dialect: 'postgres',
+    logging: false
+});
 
-// التحقق من الاتصال
-sequelize.authenticate()
-    .then(() => {
+const testConnection = async () => {
+    try {
+        await sequelize.authenticate();
         console.log('Database connection established successfully.');
-    })
-    .catch((error) => {
-        console.error('Unable to connect to the database:', error.message);
-    });
+    } catch (error) {
+        console.error('Unable to connect to the database:', error);
+    }
+};
 
 // تصدير الاتصال
-module.exports = { sequelize };
+module.exports = { sequelize, testConnection };

@@ -2,39 +2,20 @@
 // المسار: backend/routes/userRoutes.js
 
 const express = require('express');
-const { register, login, getUserProfile, updateUserProfile, getUserPurchaseHistory, deleteUser } = require('../controllers/authController');
-const { verifyToken, adminOnly } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const userController = require('../controllers/userController');
+const { authMiddleware } = require('../middleware/authMiddleware');
+const { validateUser } = require('../middleware/validationMiddleware');
 
-// مسار تسجيل مستخدم جديد
-router.post('/register', (req, res, next) => {
-    console.log('Register route accessed');
-    next();
-}, register);
+// المسارات العامة (بدون مصادقة)
+router.post('/register', validateUser, userController.register);
+router.post('/login', userController.login);
+router.post('/forgot-password', userController.forgotPassword);
 
-// مسار تسجيل الدخول
-router.post('/login', (req, res, next) => {
-    console.log('Login route accessed');
-    next();
-}, login);
-
-// مسار تسجيل الدخول
-router.post('/api/users/login', (req, res, next) => {
-    console.log('Login route accessed');
-    next();
-}, login);
-
-// مسار عرض بيانات المستخدم
-router.get('/profile', verifyToken, getUserProfile);
-
-// مسار تحديث بيانات المستخدم
-router.put('/update', verifyToken, updateUserProfile);
-
-// مسار عرض سجل مشتريات المستخدم
-router.get('/purchase-history', verifyToken, getUserPurchaseHistory);
-
-// مسار حذف مستخدم (للمسؤولين فقط)
-router.delete('/delete/:id', verifyToken, adminOnly, deleteUser);
+// المسارات المحمية بالمصادقة
+router.get('/profile', authMiddleware, userController.getProfile);
+router.put('/profile', authMiddleware, userController.updateProfile);
+router.get('/points', authMiddleware, userController.getUserPoints);
+router.get('/purchases', authMiddleware, userController.getUserPurchases);
 
 module.exports = router;

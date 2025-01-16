@@ -2,24 +2,18 @@
 // المسار: backend/routes/storeRoutes.js
 
 const express = require('express');
-const { createStore, getStoreOffers, storeLogin, addPoints, updateStore } = require('../controllers/storeController');
-const { verifyToken, adminOnly } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const storeController = require('../controllers/storeController');
+const { storeAuthMiddleware } = require('../middleware/authMiddleware');
 
-// مسار إنشاء متجر جديد
-router.post('/', createStore);
+// المسارات العامة
+router.post('/register', storeController.createStore);
+router.post('/login', storeController.storeLogin);
 
-// مسار تسجيل الدخول للمتجر
-router.post('/login', storeLogin);
-
-// مسار الحصول على العروض لمتجر معين
-router.get('/:storeId/offers', getStoreOffers);
-
-// مسار إضافة النقاط للمستخدم
-router.post('/add-points', verifyToken, addPoints);
-
-// مسار تحديث بيانات المتجر
-router.put('/:storeId', verifyToken, adminOnly, updateStore);
+// المسارات المحمية
+router.get('/profile', storeAuthMiddleware, storeController.getStoreProfile);
+router.put('/profile', storeAuthMiddleware, storeController.updateStore);
+router.get('/points', storeAuthMiddleware, storeController.getStorePoints);
+router.post('/offers', storeAuthMiddleware, storeController.createOffer);
 
 module.exports = router;

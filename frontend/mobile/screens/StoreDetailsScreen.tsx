@@ -1,73 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  ScrollView,
-  StyleSheet,
-  Image,
-} from 'react-native';
-import api from '../../shared/api/config';
-import { Store, Product, Offer } from '../../shared/types';
-import Card from '../../shared/components/Card';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { useRoute, RouteProp } from '@react-navigation/native';
+import { useGetStoreQuery } from '../store/api/storeApi';
+import Card from '../components/Card';
 
-const StoreDetailsScreen: React.FC = ({ route }: any) => {
-  const { storeId } = route.params;
-  const [store, setStore] = useState<Store | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [offers, setOffers] = useState<Offer[]>([]);
+type RouteParams = {
+  StoreDetails: {
+    storeId: string;
+  };
+};
 
-  useEffect(() => {
-    const fetchStoreDetails = async () => {
-      try {
-        const [storeRes, productsRes, offersRes] = await Promise.all([
-          api.get(`/stores/${storeId}`),
-          api.get(`/stores/${storeId}/products`),
-          api.get(`/stores/${storeId}/offers`),
-        ]);
+const StoreDetailsScreen = () => {
+  const route = useRoute<RouteProp<RouteParams, 'StoreDetails'>>();
+  const { data: store, isLoading } = useGetStoreQuery(route.params.storeId);
 
-        setStore(storeRes.data);
-        setProducts(productsRes.data);
-        setOffers(offersRes.data);
-      } catch (error) {
-        console.error('Error fetching store details:', error);
-      }
-    };
-
-    fetchStoreDetails();
-  }, [storeId]);
-
-  if (!store) return null;
+  if (isLoading) {
+    return <ActivityIndicator size="large" color="#007AFF" />;
+  }
 
   return (
     <ScrollView style={styles.container}>
-      <Image source={{ uri: store.logo }} style={styles.logo} />
-      <View style={styles.header}>
-        <Text style={styles.storeName}>{store.name}</Text>
-        <Text style={styles.rating}>⭐ {store.rating}/5</Text>
-      </View>
-
-      <Text style={styles.sectionTitle}>العروض المتاحة</Text>
-      {offers.map((offer) => (
-        <Card
-          key={offer.id}
-          title={offer.title}
-          subtitle={`النقاط المطلوبة: ${offer.pointsRequired}`}
-        >
-          <Text style={styles.description}>{offer.description}</Text>
-        </Card>
-      ))}
-
-      <Text style={styles.sectionTitle}>المنتجات</Text>
-      {products.map((product) => (
-        <Card
-          key={product.id}
-          title={product.name}
-          subtitle={`${product.price} ريال`}
-          image={product.image}
-        >
-          <Text style={styles.description}>{product.description}</Text>
-        </Card>
-      ))}
+      <Card>
+        <Text style={styles.name}>{store?.name}</Text>
+        <Text style={styles.category}>{store?.category}</Text>
+        <Text style={styles.description}>{store?.description}</Text>
+      </Card>
     </ScrollView>
   );
 };
@@ -75,34 +32,25 @@ const StoreDetailsScreen: React.FC = ({ route }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-  },
-  logo: {
-    width: '100%',
-    height: 200,
-  },
-  header: {
     padding: 16,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
-  storeName: {
+  name: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'right',
   },
-  rating: {
-    fontSize: 18,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    margin: 16,
+  category: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 16,
+    textAlign: 'right',
   },
   description: {
     fontSize: 14,
-    color: '#666',
-    marginTop: 8,
+    lineHeight: 20,
+    textAlign: 'right',
   },
 });
 

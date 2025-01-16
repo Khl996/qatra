@@ -2,14 +2,11 @@
 // المسار: backend/routes/pointRoutes.js
 
 const express = require('express');
-const { addPoints, getUserPoints } = require('../controllers/pointController');
-
 const router = express.Router();
+const pointController = require('../controllers/pointController');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
-// مسار إضافة نقاط للمستخدم
-router.post('/add', addPoints);
-
-// مسار عرض نقاط المستخدم
-router.get('/user/:userId', getUserPoints);
+router.get('/', authMiddleware, pointController.getUserPoints);
+router.post('/add', authMiddleware, pointController.addPoints);
 
 module.exports = router;

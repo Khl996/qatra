@@ -46,6 +46,22 @@ const Store = sequelize.define('Store', {
         type: DataTypes.STRING,
         allowNull: false,
     },
+    location: {
+        type: DataTypes.GEOMETRY('POINT'),
+        allowNull: true
+    },
+    address: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    workingHours: {
+        type: DataTypes.JSON,
+        allowNull: true
+    },
+    logo: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
 }, {
     timestamps: true,
     tableName: 'Stores',

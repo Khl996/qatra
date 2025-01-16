@@ -8,11 +8,11 @@ export const theme = {
     info: '#0DCAF0',
     light: '#F8F9FA',
     dark: '#212529',
-    background: '#FFFFFF',
+    background: '#F5F5F5',
     text: {
       primary: '#000000',
       secondary: '#666666',
-      light: '#999999'
+      muted: '#999999'
     }
   },
   spacing: {
@@ -35,12 +35,18 @@ export const theme = {
       regular: '400',
       medium: '500',
       bold: '700'
+    },
+    fonts: {
+      regular: 'Tajawal-Regular',
+      medium: 'Tajawal-Medium',
+      bold: 'Tajawal-Bold',
     }
   },
   borderRadius: {
-    small: 4,
-    medium: 8,
-    large: 12,
+    sm: 4,
+    md: 8,
+    lg: 12,
+    xl: 16,
     round: 9999
   },
   shadows: {

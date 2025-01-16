@@ -19,8 +19,20 @@ const Purchase = sequelize.define('Purchase', {
             key: 'id',
         },
     },
+    storeId: {
+        type: DataTypes.UUID,
+        allowNull: false,
+        references: {
+            model: 'Stores',
+            key: 'id',
+        },
+    },
     item: {
         type: DataTypes.STRING,
+        allowNull: false,
+    },
+    amount: {
+        type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
     },
     date: {

@@ -1,0 +1,16 @@
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+}

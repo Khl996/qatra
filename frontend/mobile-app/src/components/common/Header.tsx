@@ -32,7 +32,10 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <View style={[
       styles.container,
-      { paddingTop: insets.top + 10 }
+      Platform.select({
+        ios: { paddingTop: insets.top },
+        android: { marginTop: 0 }
+      })
     ]}>
       <View style={styles.headerContent}>
         {/* Profile Button */}
@@ -43,8 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
         >
           <View style={styles.avatarContainer}>
             <Image 
-              // تحديث مسار الصورة
-              source={require('../../../../assets/icons/avatar_icon.png')}
+              source={require('../../../assets/icons/avatar_icon.png')}
               style={styles.avatar}
               resizeMode="cover"
             />
@@ -73,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <View style={styles.notificationIconContainer}>
               <Image 
-                source={require('../../assets/icons/bell_icon.png')}
+                source={require('../../../assets/icons/bell_icon.png')}
                 style={styles.notificationIcon}
                 resizeMode="contain"
               />
@@ -96,9 +98,9 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    shadowColor: '#000',
     ...Platform.select({
       ios: {
-        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,

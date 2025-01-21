@@ -43,9 +43,9 @@ export default function LoginScreen() {
       >
         <View style={styles.header}>
           <Image
-            // تحديث مسار الصورة
-            source={require('../../../../assets/images/logo.png')}
+            source={require('../../../assets/images/logo.png')}
             style={styles.logo}
+            resizeMode="contain"
           />
           <Text style={styles.title}>أهلاً بك في قطرة</Text>
           <Text style={styles.subtitle}>

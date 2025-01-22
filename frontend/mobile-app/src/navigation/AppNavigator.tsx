@@ -8,7 +8,8 @@ import AuthNavigator from './AuthNavigator';
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const AppNavigator = () => {
-  const isAuthenticated = false; // سيتم تعديلها لاحقاً مع إضافة المصادقة
+  // تم تغيير القيمة إلى true لتخطي شاشة تسجيل الدخول
+  const isAuthenticated = true;
 
   return (
     <NavigationContainer>

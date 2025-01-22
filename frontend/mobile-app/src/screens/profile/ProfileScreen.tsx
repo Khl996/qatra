@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, Image, Text, TouchableOpacity } from 'react-native';
+import { 
+  View, 
+  ScrollView, 
+  StyleSheet, 
+  Text, 
+  Image, 
+  TouchableOpacity, 
+  Platform 
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header';
 import { SettingsButton } from '../../components/common/SettingsButton';
@@ -18,14 +26,17 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Header 
         username="محمد"
         userId="12345678"
         showNotification={false}
       />
-
-      <ScrollView style={styles.content}>
+      
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <Image 
@@ -34,7 +45,7 @@ export default function ProfileScreen() {
             />
             <TouchableOpacity 
               style={styles.editAvatarButton}
-              onPress={handleEditProfile}
+              onPress={() => console.log('Edit avatar')}
             >
               <Image 
                 source={require('../../assets/icons/edit_icon.png')}
@@ -68,7 +79,7 @@ export default function ProfileScreen() {
 
         <Text style={styles.version}>نسخة التطبيق 1.0.0</Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -79,6 +90,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: Platform.OS === 'ios' ? 120 : 100,
   },
   profileSection: {
     alignItems: 'center',

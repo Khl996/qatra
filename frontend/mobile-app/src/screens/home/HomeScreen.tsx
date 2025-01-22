@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header';
 import { SearchBar } from '../../components/common/SearchBar';
@@ -36,7 +36,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Header 
         username="محمد"
         userId="12345678"
@@ -45,7 +45,11 @@ export default function HomeScreen() {
         onProfilePress={() => console.log('Profile pressed')}
       />
       
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
         <SearchBar onSearch={handleSearch} />
         
         <View style={styles.carouselContainer}>
@@ -57,7 +61,11 @@ export default function HomeScreen() {
             <Text style={styles.sectionTitle}>المتاجر المميزة</Text>
             <Text style={styles.sectionLink}>عرض الكل</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScrollContent}
+          >
             {featuredStores.map(store => (
               <StoreCard
                 key={store.id}
@@ -73,7 +81,11 @@ export default function HomeScreen() {
             <Text style={styles.sectionTitle}>المتاجر القريبة</Text>
             <Text style={styles.sectionLink}>عرض الكل</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.horizontalScrollContent}
+          >
             {nearbyStores.map(store => (
               <StoreCard
                 key={store.id}
@@ -84,7 +96,7 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -96,11 +108,15 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  scrollContent: {
+    paddingTop: Platform.OS === 'ios' ? 120 : 100, // لإضافة مساحة للهيدر
+  },
   carouselContainer: {
     marginVertical: 16,
   },
   section: {
     marginBottom: 24,
+    overflow: 'visible', // للتأكد من عدم قص المحتوى
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -117,5 +133,9 @@ const styles = StyleSheet.create({
   sectionLink: {
     fontSize: 14,
     color: '#3498db',
+  },
+  horizontalScrollContent: {
+    paddingHorizontal: 16, // إضافة padding على جانبي القائمة
+    paddingRight: 4, // تقليل padding اليمين لتعويض marginRight في StoreCard
   },
 });

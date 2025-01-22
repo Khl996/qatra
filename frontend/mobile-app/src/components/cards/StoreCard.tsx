@@ -47,6 +47,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+    marginVertical: 4, // إضافة margin عمودي لمنع قص الظلال
   },
   imageContainer: {
     width: '100%',

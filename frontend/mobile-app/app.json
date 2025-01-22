@@ -24,11 +24,7 @@
       }
     },
     "experiments": {
-      "newArchEnabled": true,
-      "tsconfigPaths": true
-    },
-    "plugins": [
-      "expo-secure-store"
-    ]
+      "newArchEnabled": true
+    }
   }
 }

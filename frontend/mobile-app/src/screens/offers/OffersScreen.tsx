@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header';
 import { SearchBar } from '../../components/common/SearchBar';
@@ -41,40 +41,43 @@ export default function OffersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Header 
         username="محمد"
         userId="12345678"
         showNotification
       />
       
-      <SearchBar onSearch={handleSearch} />
-
       <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoriesContainer}
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
       >
-        {categories.map((category) => (
-          <TouchableOpacity
-            key={category}
-            style={[
-              styles.categoryButton,
-              activeCategory === category && styles.activeCategoryButton
-            ]}
-            onPress={() => setActiveCategory(category)}
-          >
-            <Text style={[
-              styles.categoryText,
-              activeCategory === category && styles.activeCategoryText
-            ]}>
-              {category}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+        <SearchBar onSearch={handleSearch} />
 
-      <ScrollView style={styles.content}>
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false}
+          style={styles.categoriesContainer}
+        >
+          {categories.map((category) => (
+            <TouchableOpacity
+              key={category}
+              style={[
+                styles.categoryButton,
+                activeCategory === category && styles.activeCategoryButton
+              ]}
+              onPress={() => setActiveCategory(category)}
+            >
+              <Text style={[
+                styles.categoryText,
+                activeCategory === category && styles.activeCategoryText
+              ]}>
+                {category}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+
         {offers.map((offer) => (
           <OfferCard
             key={offer.id}
@@ -83,7 +86,7 @@ export default function OffersScreen() {
           />
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -119,5 +122,8 @@ const styles = StyleSheet.create({
   activeCategoryText: {
     color: '#fff',
     fontWeight: '500',
+  },
+  scrollContent: {
+    paddingTop: Platform.OS === 'ios' ? 120 : 100,
   },
 });

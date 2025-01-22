@@ -6,7 +6,7 @@ import {
   TouchableOpacity, 
   Image, 
   Platform,
-  Dimensions
+  StatusBar
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -18,8 +18,6 @@ interface HeaderProps {
   onProfilePress?: () => void;
 }
 
-const { width } = Dimensions.get('window');
-
 export const Header: React.FC<HeaderProps> = ({ 
   username = 'زائر', 
   userId = '00000000',
@@ -30,64 +28,70 @@ export const Header: React.FC<HeaderProps> = ({
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[
-      styles.container,
-      Platform.select({
-        ios: { paddingTop: insets.top },
-        android: { marginTop: 0 }
-      })
-    ]}>
-      <View style={styles.headerContent}>
-        {/* Profile Button */}
-        <TouchableOpacity 
-          style={styles.profileButton}
-          onPress={onProfilePress}
-          activeOpacity={0.8}
-        >
-          <View style={styles.avatarContainer}>
-            <Image 
-              source={require('../../../assets/icons/avatar_icon.png')}
-              style={styles.avatar}
-              resizeMode="cover"
-            />
-          </View>
-        </TouchableOpacity>
-
-        {/* Welcome Section */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeText}>
-            مرحباً{' '}
-            <Text style={styles.usernameText}>
-              {username}
-            </Text>
-          </Text>
-          <Text style={styles.userIdText}>
-            #{userId}
-          </Text>
-        </View>
-
-        {/* Notification Button */}
-        {showNotification && (
+    <>
+      <StatusBar 
+        backgroundColor="transparent" 
+        translucent 
+        barStyle="dark-content"
+      />
+      <View style={[
+        styles.container,
+        { 
+          paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : insets.top,
+        }
+      ]}>
+        <View style={styles.headerContent}>
+          {/* Profile Button */}
           <TouchableOpacity 
-            style={styles.notificationButton}
-            onPress={onNotificationPress}
+            style={styles.profileButton}
+            onPress={onProfilePress}
             activeOpacity={0.8}
           >
-            <View style={styles.notificationIconContainer}>
+            <View style={styles.avatarContainer}>
               <Image 
-                source={require('../../../assets/icons/bell_icon.png')}
-                style={styles.notificationIcon}
+                source={require('../../../assets/icons/avatar_icon.png')}
+                style={styles.avatar}
                 resizeMode="contain"
               />
-              {/* Notification Badge */}
-              <View style={styles.notificationBadge}>
-                <Text style={styles.badgeText}>2</Text>
-              </View>
             </View>
           </TouchableOpacity>
-        )}
+
+          {/* Welcome Section */}
+          <View style={styles.welcomeSection}>
+            <Text style={styles.welcomeText}>
+              مرحباً{' '}
+              <Text style={styles.usernameText}>
+                {username}
+              </Text>
+            </Text>
+            <Text style={styles.userIdText}>
+              #{userId}
+            </Text>
+          </View>
+
+          {/* Notification Button */}
+          {showNotification && (
+            <TouchableOpacity 
+              style={styles.notificationButton}
+              onPress={onNotificationPress}
+              activeOpacity={0.8}
+            >
+              <View style={styles.notificationIconContainer}>
+                <Image 
+                  source={require('../../../assets/icons/bell_icon.png')}
+                  style={styles.notificationIcon}
+                  resizeMode="contain"
+                />
+                {/* Notification Badge */}
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.badgeText}>2</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
-    </View>
+    </>
   );
 };
 
@@ -98,17 +102,11 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
-    shadowColor: '#000',
-    ...Platform.select({
-      ios: {
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
   },
   headerContent: {
     flexDirection: 'row',
@@ -119,26 +117,17 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   avatarContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#fff',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
+    width: 45, // نرجع حجم الإطار إلى أكبر قليلاً
+    height: 45,
+    borderRadius: 22.5,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatar: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 25,
+    width: '80%', // تصغير الصورة داخل الإطار
+    height: '80%',
+    borderRadius: 20,
   },
   welcomeSection: {
     flex: 1,
@@ -163,27 +152,17 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   notificationIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#fff',
+    width: 36, // تصغير من 40 إلى 36
+    height: 36, // تصغير من 40 إلى 36
+    borderRadius: 18,
+    backgroundColor: 'transparent', // جعل الخلفية شفافة
     justifyContent: 'center',
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 4,
-      },
-    }),
   },
   notificationIcon: {
-    width: 24,
-    height: 24,
+    width: 22, // تصغير من 24 إلى 22
+    height: 22, // تصغير من 24 إلى 22
+    tintColor: '#2c3e50', // لون الأيقونة لتظهر بوضوح
   },
   notificationBadge: {
     position: 'absolute',

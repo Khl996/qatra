@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, Text } from 'react-native';
+import { View, ScrollView, StyleSheet, Platform, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Header } from '../../components/common/Header';
 import { PointsCard } from '../../components/cards/PointsCard';
@@ -14,14 +14,17 @@ const pointsHistory = [
 
 export default function PointsScreen() {
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Header 
         username="محمد"
         userId="12345678"
         showNotification
       />
       
-      <ScrollView style={styles.content}>
+      <ScrollView 
+        style={styles.content}
+        contentContainerStyle={styles.scrollContent}
+      >
         <PointsCard points={580} level="عضو ذهبي" />
         
         <View style={styles.historySection}>
@@ -37,7 +40,7 @@ export default function PointsScreen() {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -48,6 +51,9 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: Platform.OS === 'ios' ? 120 : 100,
   },
   historySection: {
     marginTop: 16,

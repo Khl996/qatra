@@ -28,7 +28,14 @@ export const StoreCard: React.FC<StoreCardProps> = ({
       <View style={styles.infoContainer}>
         <Text style={styles.name} numberOfLines={1}>{name}</Text>
         <View style={styles.ratingContainer}>
-          <Text style={styles.rating}>⭐ {rating.toFixed(1)}</Text>
+          <View style={styles.ratingWrapper}>
+            <Image 
+              source={require('../../../assets/icons/rating_star.png')}
+              style={styles.starIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.rating}>{rating.toFixed(1)}</Text>
+          </View>
           {distance && <Text style={styles.distance}>{distance}</Text>}
         </View>
       </View>
@@ -74,9 +81,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  ratingWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  starIcon: {
+    width: 16,
+    height: 16,
+    marginRight: 4,
+    tintColor: '#f1c40f', // لون النجمة الأصفر
+  },
   rating: {
     fontSize: 14,
-    color: '#f1c40f',
+    color: '#2c3e50',
     fontWeight: '500',
   },
   distance: {

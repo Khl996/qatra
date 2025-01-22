@@ -5,6 +5,7 @@ export type RootStackParamList = {
 
 export type MainTabParamList = {
   Home: undefined;
+  Stores: undefined; // إضافة شاشة المتاجر
   Points: undefined;
   Offers: undefined;
   Profile: undefined;

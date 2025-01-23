@@ -3,10 +3,20 @@ import { useState } from 'react';
 import { useLoginMutation } from '@shared/services/auth';
 import { useNavigate } from 'react-router-dom';
 
+interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+interface LoginResponse {
+  token: string;
+  userType: 'admin' | 'merchant';
+}
+
 export default function Login() {
   const [login, { isLoading, error }] = useLoginMutation();
   const navigate = useNavigate();
-  const [credentials, setCredentials] = useState({
+  const [credentials, setCredentials] = useState<LoginCredentials>({
     email: '',
     password: ''
   });
@@ -14,8 +24,8 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const result = await login(credentials).unwrap();
-      navigate(result.role === 'merchant' ? '/merchant' : '/admin');
+      const result = await login(credentials).unwrap() as unknown as LoginResponse;
+      navigate(result.userType === 'merchant' ? '/merchant' : '/admin');
     } catch (err) {
       console.error('Login failed:', err);
     }

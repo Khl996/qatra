@@ -1,22 +1,21 @@
-import { Box } from '@mui/material';
-import Sidebar from './Sidebar';
+import React from 'react';
+import { Box, Container } from '@mui/material';
 import Navbar from './Navbar';
+import Sidebar from './Sidebar';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
-  role: 'merchant' | 'admin';
+  role: 'admin' | 'merchant';
 }
 
 export default function DashboardLayout({ children, role }: DashboardLayoutProps) {
   return (
     <Box sx={{ display: 'flex' }}>
+      <Navbar role={role} />
       <Sidebar role={role} />
-      <Box sx={{ flexGrow: 1 }}>
-        <Navbar role={role} />
-        <Box component="main" sx={{ p: 3 }}>
-          {children}
-        </Box>
-      </Box>
+      <Container component="main" sx={{ flexGrow: 1, p: 3, mt: 8 }}>
+        {children}
+      </Container>
     </Box>
   );
 }

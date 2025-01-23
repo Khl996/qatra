@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLogoutMutation } from '@shared/services/auth';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import MenuIcon from '@mui/icons-material/Menu';
 
 interface NavbarProps {
   role: 'merchant' | 'admin';
@@ -21,6 +22,9 @@ export default function Navbar({ role }: NavbarProps) {
   return (
     <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
       <Toolbar>
+        <IconButton color="inherit" edge="start">
+          <MenuIcon />
+        </IconButton>
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           {role === 'merchant' ? 'لوحة تحكم المتجر' : 'لوحة تحكم المسؤول'}
         </Typography>

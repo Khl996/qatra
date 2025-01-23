@@ -1,4 +1,4 @@
-import { DataGrid } from '@mui/x-data-grid';
+import DataGridPro from '@shared/components/DataGridPro';
 import { Paper, Typography, Button, Stack } from '@mui/material';
 import { useState } from 'react';
 import { useGetOffersQuery } from '../services/api';
@@ -25,12 +25,11 @@ export function OffersList() {
           إضافة عرض جديد
         </Button>
       </Stack>
-      <DataGrid
+      <DataGridPro
         rows={offers}
         columns={columns}
         loading={isLoading}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
+        pageSizeOptions={[5]}
       />
       <AddOfferModal open={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </Paper>

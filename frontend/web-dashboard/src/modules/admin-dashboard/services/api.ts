@@ -1,4 +1,4 @@
-import { api } from '@shared/services/api';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export interface Store {
   id: string;
@@ -36,73 +36,124 @@ export interface SystemStats {
   };
 }
 
-export const adminApi = api.injectEndpoints({
+export interface AdminStats {
+  systemUsage: {
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      borderColor?: string;
+      backgroundColor?: string;
+    }>;
+  };
+  storesPerformance: {
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      backgroundColor: string[];
+    }>;
+  };
+}
+
+export interface StoreStatsData {
+  totalStores: number;
+  activeStores: number;
+  pendingStores: number;
+  storesGrowth: number;
+}
+
+export interface SystemMetrics {
+  totalStores: number;
+  totalUsers: number;
+  totalSales: number;
+  totalPoints: number;
+  storesGrowth: number;
+  usersGrowth: number;
+  salesGrowth: number;
+}
+
+export type ReportType = 'daily' | 'monthly' | 'yearly';
+
+export interface ReportParams {
+  type: ReportType;
+  startDate: string;
+  endDate: string;
+  format: string;
+}
+
+export const adminApi = createApi({
+  reducerPath: 'adminApi',
+  baseQuery: fetchBaseQuery({ baseUrl: '/api' }),
   endpoints: (builder) => ({
-    getStoresStats: builder.query<StoreStats, void>({
-      query: () => '/admin/stats/stores'
+    getStores: builder.query<any[], { status?: string }>({
+      query: (params = {}) => ({
+        url: 'stores',
+        params
+      })
     }),
-    getSystemStats: builder.query<SystemStats, void>({
-      query: () => '/admin/stats/system'
+    getUsers: builder.query({
+      query: () => 'users'
     }),
-    getAdminStats: builder.query<SystemStats, void>({
-      query: () => '/admin/stats'
+    getStoresStats: builder.query<SystemMetrics, void>({
+      query: () => 'stores/stats'
     }),
-    getStores: builder.query<Store[], void>({
-      query: () => '/admin/stores',
-      providesTags: ['Stores']
+    getSystemMetrics: builder.query<SystemMetrics, void>({
+      query: () => 'system/metrics'
     }),
-    approveStore: builder.mutation<void, string>({
-      query: (id) => ({
-        url: `/admin/stores/${id}/approve`,
-        method: 'POST'
-      }),
-      invalidatesTags: ['Stores']
+    getAdminStats: builder.query({
+      query: () => 'admin/stats'
     }),
     registerStore: builder.mutation({
       query: (data) => ({
-        url: '/admin/stores/register',
+        url: 'stores/register',
         method: 'POST',
         body: data
       })
     }),
+    approveStore: builder.mutation({
+      query: (id) => ({
+        url: `stores/${id}/approve`,
+        method: 'PUT'
+      })
+    }),
     updateStoreStatus: builder.mutation({
       query: ({ id, status }) => ({
-        url: `/admin/stores/${id}/status`,
+        url: `stores/${id}/status`,
         method: 'PUT',
         body: { status }
       })
     }),
-    getSystemMetrics: builder.query({
-      query: () => '/admin/metrics'
-    }),
     getStoresMonitoring: builder.query({
-      query: () => '/admin/stores/monitoring'
+      query: () => 'stores/monitoring'
     }),
-    getUsers: builder.query({
-      query: () => '/admin/users',
-      providesTags: ['Users']
+    getReports: builder.mutation<any, ReportParams>({
+      query: (params) => ({
+        url: 'reports/generate',
+        method: 'POST',
+        body: params
+      })
     }),
-    updateUserStatus: builder.mutation({
-      query: ({ id, status }) => ({
-        url: `/admin/users/${id}/status`,
-        method: 'PUT',
-        body: { status }
-      }),
-      invalidatesTags: ['Users']
+    generateReport: builder.mutation<any, ReportParams>({
+      query: (params) => ({
+        url: 'reports/generate',
+        method: 'POST',
+        body: params
+      })
     })
   })
 });
 
 export const {
-  useGetAdminStatsQuery,
   useGetStoresQuery,
-  useApproveStoreMutation,
-  useRegisterStoreMutation,
-  useUpdateStoreStatusMutation,
-  useGetSystemMetricsQuery,
-  useGetStoresMonitoringQuery,
-  useGetStoresStatsQuery,
-  useGetSystemStatsQuery,
   useGetUsersQuery,
-  useUpdateUserStatusMutation
+  useGetStoresStatsQuery,
+  useGetSystemMetricsQuery,
+  useGetAdminStatsQuery,
+  useRegisterStoreMutation,
+  useApproveStoreMutation,
+  useUpdateStoreStatusMutation,
+  useGetStoresMonitoringQuery,
+  useGetReportsMutation,
+  useGenerateReportMutation
 } = adminApi;

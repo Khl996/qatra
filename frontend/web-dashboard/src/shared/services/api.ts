@@ -7,8 +7,10 @@ interface BaseResponse<T> {
 }
 
 export const api = createApi({
+  reducerPath: 'api',
+  tagTypes: ['Stores', 'Users', 'Stats'],
   baseQuery: fetchBaseQuery({
-    baseUrl: process.env.REACT_APP_API_URL,
+    baseUrl: '/api',
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('token');
       if (token) {
@@ -17,7 +19,6 @@ export const api = createApi({
       return headers;
     }
   }),
-  tagTypes: ['Stores', 'Points', 'Customers', 'Promotions', 'Users'],
   endpoints: () => ({})
 });
 

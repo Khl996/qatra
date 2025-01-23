@@ -1,6 +1,6 @@
 import { Grid } from '@mui/material';
-import DashboardLayout from '@shared/components/layouts/DashboardLayout';
-import { SalesChart } from '../components/SalesChart';
+import { DashboardLayout } from '@shared/components/layouts';
+import SalesChart from '../components/SalesChart';
 import { StatCard } from '@shared/components/charts';
 
 export default function Sales() {

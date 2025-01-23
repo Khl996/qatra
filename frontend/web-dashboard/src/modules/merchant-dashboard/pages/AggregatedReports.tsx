@@ -1,9 +1,5 @@
 import { Grid, Paper, Typography } from '@mui/material';
-import { 
-  DoughnutChart,
-  AnalyticsChart,
-  StatCard 
-} from '@shared/components/charts';
+import { DoughnutChart, AnalyticsChart, StatCard } from '@shared/components/charts';
 import { DashboardLayout } from '@shared/components/layouts';
 import { useGetMerchantStatsQuery } from '@merchant/services/api';
 import DetailedStatistics from '@admin/components/DetailedStatistics';

@@ -11,12 +11,11 @@ interface DataGridBaseProps extends Omit<DataGridProps, 'rows' | 'columns'> {
 export function DataGridBase({ 
   rows, 
   columns, 
-  loading, 
-  height = 400,
+  loading,
   ...props 
 }: DataGridBaseProps) {
   return (
-    <Paper sx={{ height, width: '100%' }}>
+    <Paper sx={{ height: props.height || 400, width: '100%' }}>
       <DataGrid
         rows={rows}
         columns={columns}

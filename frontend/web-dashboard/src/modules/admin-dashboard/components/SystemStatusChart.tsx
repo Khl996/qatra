@@ -1,5 +1,6 @@
-import { Paper, Typography } from '@mui/material';
+import { Paper, Typography, Box } from '@mui/material';
 import { Line } from 'react-chartjs-2';
+import { ChartOptions } from 'chart.js';
 import { baseChartOptions } from '@shared/config/chartConfig';
 
 export default function SystemStatusChart() {
@@ -11,7 +12,7 @@ export default function SystemStatusChart() {
           labels: [],
           datasets: []
         }}
-        options={baseChartOptions}
+        options={baseChartOptions as ChartOptions<'line'>}
       />
     </Paper>
   );

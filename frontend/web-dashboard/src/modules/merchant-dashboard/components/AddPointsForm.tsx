@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Paper, TextField, Button, Box, Typography } from '@mui/material';
+import { Paper, TextField, Button, Box, Typography, Grid } from '@mui/material';
 import { useAddPointsMutation } from '../services/api';
 
 export default function AddPointsForm() {
@@ -13,7 +13,7 @@ export default function AddPointsForm() {
     e.preventDefault();
     try {
       await addPoints({
-        phone: formData.customerPhone,
+        customerPhone: formData.customerPhone,
         amount: Number(formData.amount)
       });
     } catch (error) {
@@ -25,24 +25,32 @@ export default function AddPointsForm() {
     <Paper sx={{ p: 3 }}>
       <Typography variant="h6" mb={2}>إضافة نقاط</Typography>
       <Box component="form" onSubmit={handleSubmit}>
-        <TextField
-          fullWidth
-          label="رقم الجوال"
-          value={formData.customerPhone}
-          onChange={(e) => setFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
-          sx={{ mb: 2 }}
-        />
-        <TextField
-          fullWidth
-          label="المبلغ"
-          type="number"
-          value={formData.amount}
-          onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-          sx={{ mb: 2 }}
-        />
-        <Button type="submit" variant="contained" fullWidth>
-          إضافة النقاط
-        </Button>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="رقم الجوال"
+              value={formData.customerPhone}
+              onChange={(e) => setFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
+              sx={{ mb: 2 }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <TextField
+              fullWidth
+              label="المبلغ"
+              type="number"
+              value={formData.amount}
+              onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+              sx={{ mb: 2 }}
+            />
+          </Grid>
+          <Grid item xs={12}>
+            <Button type="submit" variant="contained" fullWidth>
+              إضافة النقاط
+            </Button>
+          </Grid>
+        </Grid>
       </Box>
     </Paper>
   );

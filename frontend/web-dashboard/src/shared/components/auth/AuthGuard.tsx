@@ -1,24 +1,20 @@
+import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { CircularProgress } from '@mui/material';
-import { useGetCurrentUserQuery } from '@shared/services/auth';
 
 interface AuthGuardProps {
-  role: 'merchant' | 'admin';
+  role: 'admin' | 'merchant';
 }
 
 export default function AuthGuard({ role }: AuthGuardProps) {
-  const { data: user, isLoading } = useGetCurrentUserQuery(undefined);
+  const isAuthenticated = localStorage.getItem('token');
+  const userRole = localStorage.getItem('role');
 
-  if (isLoading) {
-    return <CircularProgress sx={{ position: 'fixed', top: '50%', left: '50%' }} />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (user.role !== role) {
-    return <Navigate to={`/${user.role}`} replace />;
+  if (role !== userRole) {
+    return <Navigate to="/unauthorized" />;
   }
 
   return <Outlet />;

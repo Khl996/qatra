@@ -1,27 +1,31 @@
-import { Box, Card, Typography } from '@mui/material';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
+import React from 'react';
+import { Card, CardContent, Typography } from '@mui/material';
 
 interface StatCardProps {
   title: string;
-  value: number | string;
+  value: string | number;
+  trend?: number;
   percentage?: number;
-  icon?: React.ReactNode;
+  color?: 'success' | 'warning' | 'error';
 }
 
-export function StatCard({ title, value, percentage, icon }: StatCardProps) {
+const StatCard: React.FC<StatCardProps> = ({ title, value, trend, percentage, color }) => {
   return (
-    <Card sx={{ p: 2 }}>
-      <Box display="flex" justifyContent="space-between">
-        {icon && <Box>{icon}</Box>}
+    <Card sx={{ bgcolor: color ? `${color}.light` : 'background.paper' }}>
+      <CardContent>
         <Typography variant="h6">{title}</Typography>
-      </Box>
-      <Typography variant="h4" sx={{ my: 2 }}>{value}</Typography>
-      {percentage !== undefined && (
-        <Typography color={percentage >= 0 ? 'success.main' : 'error.main'}>
-          {percentage}%
-        </Typography>
-      )}
+        <Typography variant="h4">{value}</Typography>
+        {percentage !== undefined && (
+          <Typography 
+            variant="subtitle1" 
+            color={percentage >= 0 ? 'success.main' : 'error.main'}
+          >
+            {percentage}%
+          </Typography>
+        )}
+      </CardContent>
     </Card>
   );
-}
+};
+
+export default StatCard;

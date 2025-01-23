@@ -3,7 +3,7 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { useGetStoresQuery } from '../services/api';
 
 export default function StoresList() {
-  const { data: stores = [] } = useGetStoresQuery();
+  const { data: stores = [] } = useGetStoresQuery({});
 
   const columns: GridColDef[] = [
     { field: 'name', headerName: 'اسم المتجر', flex: 1 },

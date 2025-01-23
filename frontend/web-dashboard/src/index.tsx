@@ -13,15 +13,15 @@ const root = createRoot(document.getElementById('root')!);
 
 root.render(
   <StrictMode>
-    <Provider store={store}>
-      <BrowserRouter>
+    <BrowserRouter>
+      <Provider store={store}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <SnackbarProvider maxSnack={3}>
             <App />
           </SnackbarProvider>
         </ThemeProvider>
-      </BrowserRouter>
-    </Provider>
+      </Provider>
+    </BrowserRouter>
   </StrictMode>
 );

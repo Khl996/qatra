@@ -10,17 +10,23 @@ const columns = [
   { field: 'status', headerName: 'الحالة', width: 130 }
 ];
 
-export function TransactionsTable() {
+export const TransactionsTable = () => {
   return (
     <Paper sx={{ p: 2, height: 400 }}>
       <Typography variant="h6" mb={2}>سجل المعاملات</Typography>
       <DataGrid
         rows={[]} // سيتم ملؤها من API
         columns={columns}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
-        disableSelectionOnClick
+        initialState={{
+          pagination: {
+            paginationModel: {
+              pageSize: 5,
+            },
+          },
+        }}
+        pageSizeOptions={[5]}
+        disableRowSelectionOnClick
       />
     </Paper>
   );
-}
+};

@@ -1,6 +1,6 @@
 import { Grid } from '@mui/material';
 import DashboardLayout from '@shared/components/layouts/DashboardLayout';
-import { UsersList } from '../components/UsersList';
+import UsersList from '../components/UsersList';
 
 export default function Users() {
   return (

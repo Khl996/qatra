@@ -1,7 +1,6 @@
 import { Grid, Paper } from '@mui/material';
+import { ProfileSettings, NotificationSettings } from '../components';
 import DashboardLayout from '@shared/components/layouts/DashboardLayout';
-import { ProfileSettings } from '../components/ProfileSettings';
-import { NotificationSettings } from '../components/NotificationSettings';
 import { PointsSettings } from '../components/PointsSettings';
 
 export default function Settings() {

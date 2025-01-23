@@ -1,82 +1,88 @@
-import { api } from '@shared/services/api';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import type { MerchantStats, Promotion } from '../../../types/merchant';
 
-export interface MerchantStats {
-  totalPoints: number;
-  activeCustomers: number;
-  averagePoints: number;
-  redeemedOffers: number;
-  pointsGrowth: number;
-  customerGrowth: number;
-  offersGrowth: number;
-  totalSales: number;
-  salesGrowth: number;
-  monthlyPointsActivity: {
-    labels: string[];
-    datasets: Array<{
-      label: string;
-      data: number[];
-    }>;
-  };
-  pointsDistribution: {
-    labels: string[];
-    datasets: Array<{
-      data: number[];
-      backgroundColor: string[];
-    }>;
+// Types
+interface AddPointsRequest {
+  customerPhone: string;
+  amount: number;
+  description?: string;
+}
+
+interface PointsSettings {
+  pointsPerRiyal: number;
+  minimumAmount: number;
+  maximumPointsPerDay: number;
+}
+
+interface AddOfferRequest {
+  title: string;
+  description: string;
+  discountPercentage: number;
+  startDate: string;
+  endDate: string;
+}
+
+interface UpdatePromotionRequest {
+  id: string;
+  data: {
+    isActive: boolean;
   };
 }
 
-export const merchantApi = api.injectEndpoints({
+// API Definition
+export const merchantApi = createApi({
+  reducerPath: 'merchantApi',
+  baseQuery: fetchBaseQuery({ baseUrl: '/api/merchant' }),
   endpoints: (builder) => ({
-    getTransactions: builder.query({
-      query: () => '/merchant/transactions'
+    getStoreProfile: builder.query<any, void>({
+      query: () => 'profile'
     }),
-    addPoints: builder.mutation({
+    updateStore: builder.mutation({
       query: (data) => ({
-        url: '/merchant/points/add',
-        method: 'POST',
+        url: 'profile',
+        method: 'PUT',
         body: data
       })
     }),
     getMerchantStats: builder.query<MerchantStats, void>({
-      query: () => '/merchant/stats'
+      query: () => 'stats'
     }),
-    getCustomerStats: builder.query<any, void>({
-      query: () => '/merchant/customers/stats'
+    getPromotions: builder.query<Promotion[], void>({
+      query: () => 'promotions'
     }),
-    getPointsHistory: builder.query<any, void>({
-      query: () => '/merchant/points/history'
-    }),
-    getPromotions: builder.query<any, void>({
-      query: () => '/merchant/promotions'
-    }),
-    updatePointsSettings: builder.mutation({
-      query: (data) => ({
-        url: '/merchant/points/settings',
+    updatePromotion: builder.mutation<void, UpdatePromotionRequest>({
+      query: ({ id, data }) => ({
+        url: `promotions/${id}`,
         method: 'PUT',
         body: data
-      })
-    }),
-    updatePromotion: builder.mutation({
-      query: (data) => ({
-        url: `/merchant/promotions/${data.id}`,
-        method: 'PUT',
-        body: data
-      })
-    }),
-    updatePromotionStatus: builder.mutation<void, { id: string; isActive: boolean }>({
-      query: ({ id, isActive }) => ({
-        url: `/merchant/promotions/${id}/status`,
-        method: 'PUT',
-        body: { isActive }
       })
     }),
     getOffers: builder.query<any, void>({
-      query: () => '/merchant/offers'
+      query: () => 'offers'
     }),
-    addOffer: builder.mutation({
+    getPointsHistory: builder.query<any, void>({
+      query: () => 'points/history'
+    }),
+    getCustomerStats: builder.query<any, void>({
+      query: () => 'customers/stats'
+    }),
+    addPoints: builder.mutation<void, AddPointsRequest>({
       query: (data) => ({
-        url: '/merchant/offers',
+        url: 'points/add',
+        method: 'POST',
+        body: data
+      })
+    }),
+    updatePointsSettings: builder.mutation<void, PointsSettings>({
+      query: (data) => ({
+        url: 'points/settings',
+        method: 'PUT',
+        body: data
+      })
+    }),
+    addOffer: builder.mutation<void, AddOfferRequest>({
+      query: (data) => ({
+        url: 'offers',
         method: 'POST',
         body: data
       })
@@ -84,16 +90,17 @@ export const merchantApi = api.injectEndpoints({
   })
 });
 
+// Export hooks
 export const {
-  useGetTransactionsQuery,
-  useAddPointsMutation,
+  useGetStoreProfileQuery,
+  useUpdateStoreMutation,
   useGetMerchantStatsQuery,
-  useGetCustomerStatsQuery,
-  useGetPointsHistoryQuery,
   useGetPromotionsQuery,
-  useUpdatePointsSettingsMutation,
   useUpdatePromotionMutation,
-  useUpdatePromotionStatusMutation,
   useGetOffersQuery,
+  useGetPointsHistoryQuery,
+  useGetCustomerStatsQuery,
+  useAddPointsMutation,
+  useUpdatePointsSettingsMutation,
   useAddOfferMutation
 } = merchantApi;

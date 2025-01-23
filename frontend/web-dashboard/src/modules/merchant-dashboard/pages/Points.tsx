@@ -1,8 +1,7 @@
 import { Grid } from '@mui/material';
 import DashboardLayout from '@shared/components/layouts/DashboardLayout';
-import { AddPointsForm } from '../components/AddPointsForm';
+import { PointsStats, AddPointsForm } from '../components';
 import { PointsHistory } from '../components/PointsHistory';
-import { PointsStats } from '../components/PointsStats';
 
 export default function Points() {
   return (

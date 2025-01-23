@@ -3,7 +3,7 @@ import { Box, Button, Typography } from '@mui/material';
 import { useGetStoresQuery, useApproveStoreMutation } from '../services/api';
 
 export default function StoreManagement() {
-  const { data: stores = [] } = useGetStoresQuery();
+  const { data: stores = [] } = useGetStoresQuery({});
   const [approveStore] = useApproveStoreMutation();
 
   const columns: GridColDef[] = [

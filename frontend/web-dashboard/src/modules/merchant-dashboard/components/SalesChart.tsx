@@ -1,33 +1,14 @@
-import { Paper, Box } from '@mui/material';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-} from 'chart.js';
-import { Line } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+import React from 'react';
+import { Paper, Typography } from '@mui/material';
+import LineChart from '@shared/components/charts/LineChart';
 
 export default function SalesChart() {
   const data = {
-    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+    labels: ['يناير', 'فبراير', 'مارس', 'ابريل', 'مايو', 'يونيو'],
     datasets: [
       {
         label: 'المبيعات',
-        data: [12000, 19000, 15000, 25000, 22000, 30000],
+        data: [12, 19, 3, 5, 2, 3],
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1
       }
@@ -36,9 +17,10 @@ export default function SalesChart() {
 
   return (
     <Paper sx={{ p: 2 }}>
-      <Box sx={{ height: 300 }}>
-        <Line data={data} options={{ maintainAspectRatio: false }} />
-      </Box>
+      <Typography variant="h6" gutterBottom>
+        إحصائيات المبيعات
+      </Typography>
+      <LineChart data={data} />
     </Paper>
   );
 }

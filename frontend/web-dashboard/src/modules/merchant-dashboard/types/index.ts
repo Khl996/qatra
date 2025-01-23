@@ -1,27 +1,35 @@
+export type { Promotion } from './promotion';
+
 export interface MerchantStats {
-  totalPoints: number;
-  activeCustomers: number;
-  averagePoints: number;
-  redeemedOffers: number;
+  pointsToday: number;
   pointsGrowth: number;
+  totalPoints: number;
+  totalCustomers: number;
+  activeCustomers: number;
   customerGrowth: number;
-  offersGrowth: number;
-  dailyPoints: number;
-  dailyPointsGrowth: number;
-  newCustomers: number;
-  activeOffers: number;
   totalSales: number;
   salesGrowth: number;
-  monthlyPointsActivity: ChartData;
-  pointsDistribution: ChartData;
-}
-
-export interface ChartData {
-  labels: string[];
-  datasets: Array<{
-    label: string;
-    data: number[];
-    backgroundColor?: string;
-    borderColor?: string;
-  }>;
+  totalOffers: number;
+  activeOffers: number;
+  offersGrowth: number;
+  averagePoints: number;
+  redeemedOffers: number;
+  monthlyPointsActivity: {
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      backgroundColor?: string;
+      borderColor?: string;
+    }>;
+  };
+  pointsDistribution: {
+    labels: string[];
+    datasets: Array<{
+      label: string;
+      data: number[];
+      backgroundColor?: string;
+      borderColor?: string;
+    }>;
+  };
 }

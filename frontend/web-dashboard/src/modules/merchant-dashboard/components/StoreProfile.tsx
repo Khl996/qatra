@@ -8,7 +8,7 @@ import {
   Avatar,
   Alert
 } from '@mui/material';
-import { FileUploader } from './FileUploader';
+import { FileUploader } from '@shared/components/FileUploader';
 import { useUpdateStoreMutation, useGetStoreProfileQuery } from '../services/api';
 
 export function StoreProfile() {

@@ -13,10 +13,25 @@ import {
 import { useGetPromotionsQuery, useUpdatePromotionMutation } from '../services/api';
 import AddPromotionModal from './AddPromotionModal';
 
+interface Promotion {
+  id: string;
+  title: string;
+  description: string;
+  isActive: boolean;
+  requiredPoints: number;
+}
+
 export function PromotionsManager() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { data: promotions = [] } = useGetPromotionsQuery();
   const [updatePromotion] = useUpdatePromotionMutation();
+
+  const handleStatusChange = (id: string, isActive: boolean) => {
+    updatePromotion({
+      id,
+      data: { isActive }
+    });
+  };
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -30,7 +45,7 @@ export function PromotionsManager() {
         
         <Grid item xs={12}>
           <Grid container spacing={2}>
-            {promotions.map((promo) => (
+            {promotions.map((promo: Promotion) => (
               <Grid item xs={12} md={4} key={promo.id}>
                 <Card>
                   <CardContent>
@@ -43,10 +58,7 @@ export function PromotionsManager() {
                       control={
                         <Switch
                           checked={promo.isActive}
-                          onChange={(e) => updatePromotion({
-                            id: promo.id,
-                            isActive: e.target.checked
-                          })}
+                          onChange={(e) => handleStatusChange(promo.id, e.target.checked)}
                         />
                       }
                       label={promo.isActive ? 'نشط' : 'غير نشط'}

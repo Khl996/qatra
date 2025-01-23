@@ -15,12 +15,12 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "baseUrl": "./src",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "@shared/*": ["./shared/*"],
-      "@admin/*": ["./modules/admin-dashboard/*"],
-      "@merchant/*": ["./modules/merchant-dashboard/*"]
+      "src/*": ["src/*"],
+      "@shared/*": ["src/shared/*"],
+      "@admin/*": ["src/modules/admin-dashboard/*"],
+      "@merchant/*": ["src/modules/merchant-dashboard/*"]
     }
   },
   "include": ["src"]

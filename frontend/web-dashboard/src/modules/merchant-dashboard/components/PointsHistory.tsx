@@ -1,6 +1,6 @@
 import { Paper, Typography } from '@mui/material';
-import { DataGrid } from '@mui/x-data-grid';
 import { useGetPointsHistoryQuery } from '../services/api';
+import DataGridPro from '@shared/components/DataGridPro';
 
 const columns = [
   { field: 'id', headerName: 'رقم العملية', width: 120 },
@@ -17,12 +17,11 @@ export function PointsHistory() {
   return (
     <Paper sx={{ p: 2, height: 400 }}>
       <Typography variant="h6" mb={2}>سجل النقاط</Typography>
-      <DataGrid
+      <DataGridPro
         rows={data}
         columns={columns}
         loading={isLoading}
-        pageSize={5}
-        rowsPerPageOptions={[5]}
+        pageSizeOptions={[5]}
       />
     </Paper>
   );

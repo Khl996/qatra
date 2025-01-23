@@ -15,9 +15,8 @@ export interface LoginCredentials {
 export interface LoginResponse {
   user: {
     id: string;
-    name: string;
-    email: string;
     role: 'merchant' | 'admin';
+    name: string;
   };
   token: string;
 }

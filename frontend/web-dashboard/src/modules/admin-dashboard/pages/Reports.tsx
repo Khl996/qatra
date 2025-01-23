@@ -1,8 +1,8 @@
 import { Grid } from '@mui/material';
 import DashboardLayout from '@shared/components/layouts/DashboardLayout';
 import { StatCard } from '@shared/components/charts';
-import { StoresPerformanceChart } from '../components/StoresPerformanceChart';
-import { SystemStatusChart } from '../components/SystemStatusChart';
+import StoresPerformanceChart from '../components/StoresPerformanceChart';
+import SystemStatusChart from '../components/SystemStatusChart';
 
 export default function AdminReports() {
   return (

@@ -4,14 +4,15 @@ import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { useGenerateReportMutation } from '@shared/services/reports';
 import { LoadingState } from '@shared/components/LoadingState';
+import { ReportType, ReportParams } from '../services/api';
 
 export function ReportsGenerator() {
   const [generateReport, { isLoading }] = useGenerateReportMutation();
-  const [reportConfig, setReportConfig] = useState({
-    type: '',
+  const [reportConfig, setReportConfig] = useState<ReportParams>({
+    type: 'daily' as ReportType,
     startDate: '',
     endDate: '',
-    format: 'PDF'
+    format: 'pdf'
   });
 
   if (isLoading) return <LoadingState message="جاري إنشاء التقرير..." />;
@@ -25,11 +26,11 @@ export function ReportsGenerator() {
               <InputLabel>نوع التقرير</InputLabel>
               <Select
                 value={reportConfig.type}
-                onChange={(e) => setReportConfig({ ...reportConfig, type: e.target.value })}
+                onChange={(e) => setReportConfig({ ...reportConfig, type: e.target.value as ReportType })}
               >
-                <MenuItem value="sales">المبيعات</MenuItem>
-                <MenuItem value="points">النقاط</MenuItem>
-                <MenuItem value="stores">المتاجر</MenuItem>
+                <MenuItem value="daily">يومي</MenuItem>
+                <MenuItem value="monthly">شهري</MenuItem>
+                <MenuItem value="yearly">سنوي</MenuItem>
               </Select>
             </FormControl>
           </Grid>

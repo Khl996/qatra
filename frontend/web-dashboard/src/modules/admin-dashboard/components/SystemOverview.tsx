@@ -14,27 +14,27 @@ export default function SystemOverview() {
         <Grid item xs={12} md={3}>
           <StatCard
             title="إجمالي المتاجر"
-            value={data?.totalStores}
+            value={data?.totalStores || 0}
             trend={data?.storesGrowth}
           />
         </Grid>
         <Grid item xs={12} md={3}>
           <StatCard
             title="إجمالي المستخدمين"
-            value={data?.totalUsers}
+            value={data?.totalUsers ?? 0}
             trend={data?.usersGrowth}
           />
         </Grid>
         <Grid item xs={12} md={3}>
           <StatCard
             title="النقاط الممنوحة"
-            value={data?.totalPoints}
+            value={data?.totalPoints ?? 0}
           />
         </Grid>
         <Grid item xs={12} md={3}>
           <StatCard
             title="قيمة المبيعات"
-            value={data?.totalSales}
+            value={data?.totalSales ?? 0}
             trend={data?.salesGrowth}
           />
         </Grid>

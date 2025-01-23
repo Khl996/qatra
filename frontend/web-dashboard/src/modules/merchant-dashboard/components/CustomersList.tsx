@@ -12,7 +12,7 @@ const columns = [
     field: 'actions',
     headerName: 'إجراءات',
     flex: 1,
-    renderCell: (params) => (
+    renderCell: (params: GridRenderCellParams) => (
       <Button
         variant="contained"
         size="small"

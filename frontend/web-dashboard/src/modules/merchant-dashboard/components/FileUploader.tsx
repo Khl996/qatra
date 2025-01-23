@@ -1,16 +1,16 @@
 import { Box, Button, LinearProgress, Typography } from '@mui/material';
 import { useCallback, useState } from 'react';
-import { useDropzone } from 'react-dropzone';
+import { useDropzone, Accept } from 'react-dropzone';
 
 interface FileUploaderProps {
   onUpload: (file: File) => Promise<void>;
-  acceptedTypes?: string[];
+  allowedTypes?: string[];
   maxSize?: number;
 }
 
 export function FileUploader({ 
   onUpload, 
-  acceptedTypes = ['image/*', 'application/pdf'], 
+  allowedTypes = ['image/*', 'application/pdf'], 
   maxSize = 5242880 // 5MB
 }: FileUploaderProps) {
   const [uploading, setUploading] = useState(false);
@@ -29,9 +29,14 @@ export function FileUploader({
     }
   }, [onUpload]);
 
+  const acceptedTypes: Accept = {
+    'image/*': ['.jpg', '.jpeg', '.png'],
+    'application/pdf': ['.pdf']
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: acceptedTypes.join(','),
+    accept: acceptedTypes,
     maxSize,
     multiple: false
   });

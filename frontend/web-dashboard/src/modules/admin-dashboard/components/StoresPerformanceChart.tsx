@@ -1,10 +1,11 @@
-import { Paper, Box, Typography } from '@mui/material';
+import React from 'react';
+import { Paper, Typography, Box } from '@mui/material';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, ChartData } from 'chart.js';
 import 'chart.js/auto';
 
-export default function StoresPerformanceChart() {
-  const data: ChartData = {
+const StoresPerformanceChart = () => {
+  const data: ChartData<'bar'> = {
     labels: ['متجر 1', 'متجر 2', 'متجر 3', 'متجر 4', 'متجر 5'],
     datasets: [
       {
@@ -23,4 +24,6 @@ export default function StoresPerformanceChart() {
       </Box>
     </Paper>
   );
-}
+};
+
+export default StoresPerformanceChart;

@@ -1,9 +1,9 @@
 import { Grid, Paper, Typography } from '@mui/material';
-import { AnalyticsChart } from '@shared/components/charts/AnalyticsChart';
-import { useGetAdminStatsQuery } from '@admin/services/api';
+import { LineChart, BarChart } from '@shared/components/charts';
+import { useGetAdminStatsQuery } from '../services/api';
 
 export default function DetailedStatistics() {
-  const { data: stats } = useGetAdminStatsQuery();
+  const { data: stats } = useGetAdminStatsQuery({});
 
   return (
     <Grid container spacing={3}>
@@ -14,18 +14,17 @@ export default function DetailedStatistics() {
           </Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <AnalyticsChart
-                type="line"
+              <LineChart
                 data={stats?.systemUsage || { labels: [], datasets: [] }}
                 height={300}
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <AnalyticsChart
-                type="bar"
-                data={stats?.storesPerformance || { labels: [], datasets: [] }}
-                height={300}
-              />
+              <div style={{ height: 300 }}>
+                <BarChart
+                  data={stats?.storesPerformance || { labels: [], datasets: [] }}
+                />
+              </div>
             </Grid>
           </Grid>
         </Paper>

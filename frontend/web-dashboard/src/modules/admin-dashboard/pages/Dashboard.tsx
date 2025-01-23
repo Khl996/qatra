@@ -1,5 +1,5 @@
 import { Grid } from '@mui/material';
-import DashboardLayout from '@shared/components/layouts/DashboardLayout';
+import { DashboardLayout } from '@shared/components/layouts';
 import { StatCard } from '@shared/components/charts';
 import { StoresList, UsersList } from '../components';
 

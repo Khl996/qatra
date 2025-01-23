@@ -28,7 +28,10 @@ export default function AddOfferModal({ open, onClose }: AddOfferModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await addOffer(formData).unwrap();
+      await addOffer({
+        ...formData,
+        discountPercentage: Number(formData.points)
+      }).unwrap();
       onClose();
     } catch (error) {
       console.error('Failed to add offer:', error);

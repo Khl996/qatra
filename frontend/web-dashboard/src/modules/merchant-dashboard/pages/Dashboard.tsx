@@ -1,6 +1,6 @@
 import { Grid } from '@mui/material';
-import DashboardLayout from '@shared/components/layouts/DashboardLayout';
-import { StatCard } from '@shared/components/charts';
+import DashboardLayout from '../../../shared/components/layouts/DashboardLayout';
+import { StatCard } from '../../../shared/components/charts';
 import { SalesChart, PointsChart } from '../components';
 
 export default function MerchantDashboard() {

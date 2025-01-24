@@ -15,6 +15,15 @@ import SalesPage from './pages/merchant/sales/SalesPage';
 import FinancePage from './pages/merchant/finance/FinancePage';
 import ReportsPage from './pages/merchant/reports/ReportsPage';
 import SettingsPage from './pages/merchant/settings/SettingsPage';
+import AdminLoginPage from './pages/admin/auth/AdminLoginPage';
+import AdminDashboard from './pages/admin/dashboard/AdminDashboard';
+import AdminLayout from './layouts/admin/AdminLayout';
+import StoresManagement from './pages/admin/stores/StoresManagement';
+import UsersManagement from './pages/admin/users/UsersManagement';
+import FinancialReports from './pages/admin/finance/FinancialReports';
+import SystemReports from './pages/admin/reports/SystemReports';
+import SystemSettings from './pages/admin/settings/SystemSettings';
+import SystemManagement from './pages/admin/system/SystemManagement';
 
 function App() {
   console.log('App component rendering');
@@ -43,6 +52,20 @@ function App() {
           </Route>
         </Route>
         
+        {/* Admin Routes */}
+        <Route path="/admin">
+          <Route path="login" element={<AdminLoginPage />} />
+          <Route element={<AdminLayout />}>
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="stores" element={<StoresManagement />} />  {/* إضافة المسار الجديد */}
+            <Route path="users" element={<UsersManagement />} />  {/* إضافة المسار الجديد */}
+            <Route path="finance" element={<FinancialReports />} /> {/* إضافة المسار الجديد */}
+            <Route path="reports" element={<SystemReports />} /> {/* إضافة المسار الجديد */}
+            <Route path="settings" element={<SystemSettings />} /> {/* إضافة المسار الجديد */}
+            <Route path="system" element={<SystemManagement />} /> {/* إضافة المسار الجديد */}
+          </Route>
+        </Route>
+
         {/* 404 Page - Must be last */}
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

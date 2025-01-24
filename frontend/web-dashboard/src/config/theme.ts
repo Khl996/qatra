@@ -1,40 +1,19 @@
-import { createTheme } from '@mui/material/styles';
+import { extendTheme } from '@chakra-ui/react';
 
-const theme = createTheme({
+const theme = extendTheme({
+  colors: {
+    brand: {
+      darkBlue: '#003f5c',
+      blue: '#007aff',
+      lightBlue: '#9fd3f2',
+      white: '#ffffff',
+    },
+  },
+  fonts: {
+    body: 'Cairo, sans-serif',
+    heading: 'Cairo, sans-serif',
+  },
   direction: 'rtl',
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-  typography: {
-    fontFamily: [
-      'Cairo',
-      'Roboto',
-      'Arial',
-      'sans-serif'
-    ].join(','),
-  },
-  components: {
-    MuiTextField: {
-      defaultProps: {
-        size: 'small',
-      },
-    },
-    MuiButton: {
-      defaultProps: {
-        size: 'medium',
-      },
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-        },
-      },
-    },
-  },
 });
 
 export default theme;

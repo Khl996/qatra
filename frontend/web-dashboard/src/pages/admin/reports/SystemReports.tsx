@@ -1,172 +1,198 @@
 import {
   Box,
-  Heading,
+  Stack,
   Card,
   CardHeader,
   CardBody,
-  Stack,
+  Heading,
+  HStack,
+  Button,
+  Select,
   Tabs,
   TabList,
   TabPanels,
   TabPanel,
   Tab,
-  Grid,
-  GridItem,
-  Select,
-  Button,
-  HStack,
-  Text,
-  Flex,
+  SimpleGrid,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem
 } from '@chakra-ui/react';
-import { FiDownload, FiPrinter } from 'react-icons/fi';
-import { LineChart, BarChart, DoughnutChart } from '../../../shared/components/ui/charts';
+import { LineChart, DoughnutChart } from '../../../shared/components/ui/charts';
+import { useState } from 'react';
+import { FiDownload } from 'react-icons/fi';
+import ReportFilters from './components/ReportFilters';
+import { ReportDetailsModal } from '../../../shared/components/modals/reports/ReportDetailsModal';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
+interface DateRange {
+  start: Date | null;
+  end: Date | null;
+}
 
 const SystemReports = () => {
-  const storesData = {
-    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange>({ start: null, end: null });
+
+  const getTabIndexFromURL = () => {
+    const type = searchParams.get('type');
+    const tabTypes = ['overview', 'sales', 'stores', 'users'];
+    return tabTypes.indexOf(type || 'overview');
+  };
+
+  const handleDateRangeChange = (range: DateRange) => {
+    setDateRange(range);
+    // TODO: Fetch data based on new date range
+    console.log('Date range changed:', range);
+  };
+
+  // تحديث التبويب النشط بناءً على المعلمات في URL
+  const handleTabChange = (index: number) => {
+    const tabTypes = ['overview', 'sales', 'stores', 'users'];
+    navigate(`/admin/reports?type=${tabTypes[index]}`);
+  };
+
+  // معالجة تصدير التقرير
+  const handleExport = (format: 'pdf' | 'excel') => {
+    console.log(`Exporting report as ${format}`);
+    // TODO: تنفيذ التصدير
+  };
+
+  // معالجة عرض تفاصيل التقرير
+  const handleViewDetails = (reportData: any) => {
+    setSelectedReport(reportData);
+    setIsDetailsModalOpen(true);
+  };
+
+  // بيانات تجريبية للرسوم البيانية
+  const salesData = {
+    labels: ['يناير', 'فبراير', 'مارس', 'ابريل', 'مايو', 'يونيو'],
     datasets: [{
-      label: 'المتاجر الجديدة',
-      data: [12, 19, 15, 25, 22, 30],
+      label: 'المبيعات',
+      data: [12000, 19000, 15000, 25000, 22000, 30000],
       borderColor: 'rgb(53, 162, 235)',
       backgroundColor: 'rgba(53, 162, 235, 0.5)',
     }]
   };
 
-  const usersData = {
-    labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-    datasets: [{
-      label: 'المستخدمين النشطين',
-      data: [150, 230, 280, 420, 530, 650],
-      backgroundColor: 'rgba(75, 192, 192, 0.5)',
-      borderColor: 'rgba(75, 192, 192, 1)',
-      borderWidth: 1
-    }]
-  };
-
-  const pointsDistributionData = {
+  const storesData = {
     labels: ['مطاعم', 'مقاهي', 'متاجر', 'خدمات'],
     datasets: [{
-      label: 'توزيع المتاجر',
-      data: [35, 25, 20, 20],
+      data: [30, 25, 20, 15],
       backgroundColor: [
         'rgba(255, 99, 132, 0.5)',
         'rgba(54, 162, 235, 0.5)',
         'rgba(255, 206, 86, 0.5)',
         'rgba(75, 192, 192, 0.5)',
       ],
-      borderColor: [
-        'rgba(255, 99, 132, 1)',
-        'rgba(54, 162, 235, 1)',
-        'rgba(255, 206, 86, 1)',
-        'rgba(75, 192, 192, 1)',
-      ],
-      borderWidth: 1
     }]
   };
 
   return (
     <Stack spacing={6}>
-      <Flex justify="space-between" align="center">
-        <Heading size="lg">التقارير العامة</Heading>
-        <HStack spacing={4}>
-          <Select defaultValue="month" w="200px">
-            <option value="week">الأسبوع الحالي</option>
-            <option value="month">الشهر الحالي</option>
-            <option value="quarter">الربع الحالي</option>
-            <option value="year">السنة الحالية</option>
+      <HStack justify="space-between">
+        <Heading size="lg">التقارير</Heading>
+        <HStack>
+          <Menu>
+            <MenuButton as={Button} leftIcon={<FiDownload />} colorScheme="blue">
+              تصدير التقرير
+            </MenuButton>
+            <MenuList>
+              <MenuItem onClick={() => handleExport('pdf')}>
+                تصدير PDF
+              </MenuItem>
+              <MenuItem onClick={() => handleExport('excel')}>
+                تصدير Excel
+              </MenuItem>
+            </MenuList>
+          </Menu>
+          <Select
+            placeholder="نوع التقرير"
+            w="200px"
+            onChange={(e) => navigate(`/admin/reports?type=${e.target.value}`)}
+          >
+            <option value="sales">المبيعات</option>
+            <option value="stores">المتاجر</option>
+            <option value="users">المستخدمين</option>
           </Select>
-          <Button leftIcon={<FiPrinter />} colorScheme="blue" variant="outline">
-            طباعة
-          </Button>
-          <Button leftIcon={<FiDownload />} colorScheme="blue">
-            تصدير التقرير
-          </Button>
         </HStack>
-      </Flex>
+      </HStack>
 
-      <Tabs variant="enclosed">
+      <ReportFilters 
+        onDateRangeChange={handleDateRangeChange}
+        onFilterChange={(filters) => {
+          // تحديث المعلمات في URL
+          const params = new URLSearchParams(searchParams);
+          Object.entries(filters).forEach(([key, value]) => {
+            params.set(key, String(value));
+          });
+          navigate(`/admin/reports?${params.toString()}`);
+        }}
+      />
+
+      <Tabs
+        index={getTabIndexFromURL()}
+        onChange={handleTabChange}
+      >
         <TabList>
-          <Tab>تقرير المتاجر</Tab>
-          <Tab>تقرير المستخدمين</Tab>
-          <Tab>تقرير النقاط</Tab>
-          <Tab>تقرير العمليات</Tab>
+          <Tab>نظرة عامة</Tab>
+          <Tab>المبيعات</Tab>
+          <Tab>المتاجر</Tab>
+          <Tab>المستخدمين</Tab>
         </TabList>
 
         <TabPanels>
           <TabPanel>
-            <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-              <GridItem colSpan={2}>
-                <Card>
-                  <CardHeader>
-                    <Heading size="md">نمو المتاجر</Heading>
-                  </CardHeader>
-                  <CardBody>
-                    <Box h="300px">
-                      <LineChart data={storesData} />
-                    </Box>
-                  </CardBody>
-                </Card>
-              </GridItem>
+            <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
+              {/* تقرير المبيعات */}
+              <Card
+                cursor="pointer"
+                onClick={() => handleViewDetails(salesData)}
+                _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+                transition="all 0.2s"
+              >
+                <CardHeader>
+                  <Heading size="md">تحليل المبيعات</Heading>
+                </CardHeader>
+                <CardBody>
+                  <Box h="300px">
+                    <LineChart data={salesData} />
+                  </Box>
+                </CardBody>
+              </Card>
 
-              <GridItem colSpan={1}>
-                <Card>
-                  <CardHeader>
-                    <Text fontSize="lg" fontWeight="bold">إحصائيات المتاجر</Text>
-                  </CardHeader>
-                  <CardBody>
-                    <Stack spacing={4}>
-                      <HStack justify="space-between">
-                        <Text>إجمالي المتاجر النشطة:</Text>
-                        <Text fontWeight="bold">156</Text>
-                      </HStack>
-                      <HStack justify="space-between">
-                        <Text>متوسط العمولة:</Text>
-                        <Text fontWeight="bold">10%</Text>
-                      </HStack>
-                      <HStack justify="space-between">
-                        <Text>المتاجر الجديدة (هذا الشهر):</Text>
-                        <Text fontWeight="bold">12</Text>
-                      </HStack>
-                    </Stack>
-                  </CardBody>
-                </Card>
-              </GridItem>
-
-              <GridItem colSpan={1}>
-                <Card>
-                  <CardHeader>
-                    <Text fontSize="lg" fontWeight="bold">توزيع المتاجر</Text>
-                  </CardHeader>
-                  <CardBody>
-                    <Box h="200px">
-                      <DoughnutChart data={pointsDistributionData} />
-                    </Box>
-                  </CardBody>
-                </Card>
-              </GridItem>
-            </Grid>
+              {/* توزيع المتاجر */}
+              <Card
+                cursor="pointer"
+                onClick={() => handleViewDetails(storesData)}
+                _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+                transition="all 0.2s"
+              >
+                <CardHeader>
+                  <Heading size="md">توزيع المتاجر</Heading>
+                </CardHeader>
+                <CardBody>
+                  <Box h="300px">
+                    <DoughnutChart data={storesData} />
+                  </Box>
+                </CardBody>
+              </Card>
+            </SimpleGrid>
           </TabPanel>
 
-          <TabPanel>
-            <Grid templateColumns="repeat(2, 1fr)" gap={6}>
-              <GridItem colSpan={2}>
-                <Card>
-                  <CardHeader>
-                    <Heading size="md">نشاط المستخدمين</Heading>
-                  </CardHeader>
-                  <CardBody>
-                    <Box h="300px">
-                      <BarChart data={usersData} />
-                    </Box>
-                  </CardBody>
-                </Card>
-              </GridItem>
-            </Grid>
-          </TabPanel>
-
-          {/* يمكن إضافة المزيد من التقارير في الـ TabPanels الأخرى */}
+          {/* المزيد من التفاصيل في باقي التابات */}
         </TabPanels>
       </Tabs>
+
+      <ReportDetailsModal 
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        report={selectedReport}
+      />
     </Stack>
   );
 };

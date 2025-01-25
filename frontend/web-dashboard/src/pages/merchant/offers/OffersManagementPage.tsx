@@ -109,6 +109,7 @@ const OffersManagementPage = () => {
     expiryDate: ''
   });
 
+  const [selectedOffer, setSelectedOffer] = useState<Offer | null>(null);
   const toast = useToast();
 
   const handleCreateOffer = () => {
@@ -157,6 +158,155 @@ const OffersManagementPage = () => {
     }
   };
 
+  // معالجة فتح مودال التعديل
+  const handleEditOffer = (offer: Offer) => {
+    setSelectedOffer(offer);
+    onOpen();
+  };
+
+  // معالجة إضافة عرض جديد
+  const handleAddOffer = () => {
+    setSelectedOffer(null);
+    onOpen();
+  };
+
+  // معالجة حذف العرض
+  const handleDeleteOffer = (offerId: string) => {
+    // TODO: تنفيذ حذف العرض
+    toast({
+      title: "تم حذف العرض",
+      status: "success",
+      duration: 3000,
+    });
+  };
+
+  // تحديث معالج حفظ العرض للتعامل مع العرض الجديد والتعديل
+  const handleSaveOffer = async (offerData: Omit<Offer, 'id'>) => {
+    try {
+      if (selectedOffer) {
+        // تحديث عرض موجود
+        const updatedOffer: Offer = {
+          ...offerData,
+          id: selectedOffer.id
+        };
+        // TODO: تنفيذ تحديث العرض في قاعدة البيانات
+        setOffers(offers.map(offer => 
+          offer.id === selectedOffer.id ? updatedOffer : offer
+        ));
+      } else {
+        // إضافة عرض جديد
+        const newOffer: Offer = {
+          ...offerData,
+          id: Math.random().toString(36).substr(2, 9)
+        };
+        setOffers([...offers, newOffer]);
+      }
+
+      toast({
+        title: selectedOffer ? "تم تحديث العرض" : "تم إضافة العرض",
+        status: "success",
+        duration: 3000,
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "حدث خطأ",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
+
+  // إضافة دالة لعرض حقل القيمة المناسب حسب نوع المكافأة
+  const renderRewardValueField = () => {
+    switch (newOffer.reward.type) {
+      case 'PERCENTAGE_DISCOUNT':
+        return (
+          <FormControl isRequired>
+            <FormLabel>نسبة الخصم (%)</FormLabel>
+            <NumberInput
+              min={0}
+              max={100}
+              value={newOffer.reward.value}
+              onChange={(_, value) => setNewOffer({ 
+                ...newOffer, 
+                reward: { ...newOffer.reward, value } 
+              })}
+            >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+        );
+
+      case 'FIXED_DISCOUNT':
+        return (
+          <FormControl isRequired>
+            <FormLabel>قيمة الخصم (ر.س)</FormLabel>
+            <NumberInput
+              min={0}
+              value={newOffer.reward.value}
+              onChange={(_, value) => setNewOffer({ 
+                ...newOffer, 
+                reward: { ...newOffer.reward, value } 
+              })}
+            >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+        );
+
+      case 'FREE_PRODUCT':
+        return (
+          <FormControl isRequired>
+            <FormLabel>عدد المنتجات المجانية</FormLabel>
+            <NumberInput
+              min={1}
+              value={newOffer.reward.value}
+              onChange={(_, value) => setNewOffer({ 
+                ...newOffer, 
+                reward: { ...newOffer.reward, value } 
+              })}
+            >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+        );
+
+      case 'EXTRA_QUANTITY':
+        return (
+          <FormControl isRequired>
+            <FormLabel>الكمية الإضافية</FormLabel>
+            <NumberInput
+              min={1}
+              value={newOffer.reward.value}
+              onChange={(_, value) => setNewOffer({ 
+                ...newOffer, 
+                reward: { ...newOffer.reward, value } 
+              })}
+            >
+              <NumberInputField />
+              <NumberInputStepper>
+                <NumberIncrementStepper />
+                <NumberDecrementStepper />
+              </NumberInputStepper>
+            </NumberInput>
+          </FormControl>
+        );
+    }
+  };
+
   return (
     <Stack spacing={6}>
       <Card>
@@ -166,7 +316,7 @@ const OffersManagementPage = () => {
             <Button
               leftIcon={<FiPlus />}
               colorScheme="blue"
-              onClick={onOpen}
+              onClick={handleAddOffer}
             >
               إضافة عرض جديد
             </Button>
@@ -192,6 +342,7 @@ const OffersManagementPage = () => {
                     icon={<FiEdit2 />}
                     size="sm"
                     variant="ghost"
+                    onClick={() => handleEditOffer(offer)}
                   />
                   <IconButton
                     aria-label="حذف"
@@ -199,6 +350,7 @@ const OffersManagementPage = () => {
                     size="sm"
                     variant="ghost"
                     colorScheme="red"
+                    onClick={() => handleDeleteOffer(offer.id)}
                   />
                 </HStack>
               </HStack>
@@ -228,7 +380,9 @@ const OffersManagementPage = () => {
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>إضافة عرض جديد</ModalHeader>
+          <ModalHeader>
+            {selectedOffer ? 'تعديل العرض' : 'إضافة عرض جديد'}
+          </ModalHeader>
           <ModalBody>
             <Stack spacing={4}>
               <FormControl isRequired>
@@ -252,7 +406,11 @@ const OffersManagementPage = () => {
                   value={newOffer.reward.type}
                   onChange={(e) => setNewOffer({
                     ...newOffer,
-                    reward: { ...newOffer.reward, type: e.target.value as OfferReward['type'] }
+                    reward: { 
+                      type: e.target.value as OfferReward['type'],
+                      value: 0, // إعادة تعيين القيمة عند تغيير النوع
+                      productId: e.target.value === 'FREE_PRODUCT' ? newOffer.reward.productId : undefined
+                    }
                   })}
                 >
                   <option value="PERCENTAGE_DISCOUNT">خصم بالنسبة المئوية</option>
@@ -261,6 +419,26 @@ const OffersManagementPage = () => {
                   <option value="EXTRA_QUANTITY">كمية إضافية</option>
                 </Select>
               </FormControl>
+
+              {renderRewardValueField()}
+
+              {/* إضافة حقل اختيار المنتج إذا كان العرض منتج مجاني */}
+              {newOffer.reward.type === 'FREE_PRODUCT' && (
+                <FormControl isRequired>
+                  <FormLabel>اختر المنتج</FormLabel>
+                  <Select
+                    value={newOffer.reward.productId}
+                    onChange={(e) => setNewOffer({
+                      ...newOffer,
+                      reward: { ...newOffer.reward, productId: e.target.value }
+                    })}
+                  >
+                    <option value="product-1">قهوة أمريكية</option>
+                    <option value="product-2">كابتشينو</option>
+                    <option value="product-3">لاتيه</option>
+                  </Select>
+                </FormControl>
+              )}
 
               <FormControl isRequired>
                 <FormLabel>عنوان العرض</FormLabel>
@@ -285,22 +463,6 @@ const OffersManagementPage = () => {
                     min={0}
                     value={newOffer.condition.value}
                     onChange={(_, value) => setNewOffer({ ...newOffer, condition: { ...newOffer.condition, value } })}
-                  >
-                    <NumberInputField />
-                    <NumberInputStepper>
-                      <NumberIncrementStepper />
-                      <NumberDecrementStepper />
-                    </NumberInputStepper>
-                  </NumberInput>
-                </FormControl>
-
-                <FormControl isRequired>
-                  <FormLabel>نسبة الخصم (%)</FormLabel>
-                  <NumberInput
-                    min={0}
-                    max={100}
-                    value={newOffer.reward.value}
-                    onChange={(_, value) => setNewOffer({ ...newOffer, reward: { ...newOffer.reward, value } })}
                   >
                     <NumberInputField />
                     <NumberInputStepper>
@@ -338,8 +500,11 @@ const OffersManagementPage = () => {
             <Button variant="ghost" mr={3} onClick={onClose}>
               إلغاء
             </Button>
-            <Button colorScheme="blue" onClick={handleCreateOffer}>
-              إنشاء العرض
+            <Button 
+              colorScheme="blue" 
+              onClick={() => handleSaveOffer(newOffer)}
+            >
+              {selectedOffer ? 'تحديث' : 'إضافة'}
             </Button>
           </ModalFooter>
         </ModalContent>

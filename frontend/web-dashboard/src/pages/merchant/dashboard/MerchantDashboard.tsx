@@ -19,24 +19,29 @@ import {
   Td,
   Icon,
   Text,
+  HStack,
+  Button,
 } from '@chakra-ui/react';
-import { FiUsers, FiStar, FiDollarSign, FiShoppingBag } from 'react-icons/fi';
-// تصحيح مسار الاستيراد
-import LineChart from '../../../shared/components/ui/charts/LineChart';
-// أو استخدام الاستيراد من ملف index
-// import { LineChart } from '../../../shared/components/ui/charts';
+import { FiUsers, FiStar, FiDollarSign, FiShoppingBag, FiTag, FiBarChart2, FiFileText } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { LineChart } from '../../../shared/components/ui/charts';
 
 const MerchantDashboard = () => {
-  // للتأكد من عمل الصفحة
-  console.log('Dashboard is rendering');
+  const navigate = useNavigate();
 
   // بيانات تجريبية
-  type StatChangeType = 'increase' | 'decrease';
   const stats = [
-    { label: 'إجمالي النقاط', value: '12,345', icon: FiStar, change: { value: 23, type: 'increase' as StatChangeType } },
-    { label: 'العملاء النشطين', value: '432', icon: FiUsers, change: { value: 12, type: 'increase' as StatChangeType } },
-    { label: 'المبيعات اليومية', value: '2,500 ر.س', icon: FiDollarSign, change: { value: 5, type: 'decrease' as StatChangeType } },
-    { label: 'العروض النشطة', value: '6', icon: FiShoppingBag, change: { value: 8, type: 'increase' as StatChangeType } },
+    { 
+      label: 'إجمالي النقاط', 
+      value: '12,345', 
+      icon: FiStar, 
+      change: { value: 23, type: 'increase' as const },
+      path: '/merchant/points',
+      color: 'blue.500'
+    },
+    { label: 'العملاء النشطين', value: '432', icon: FiUsers, change: { value: 12, type: 'increase' as const }, path: '/merchant/customers' },
+    { label: 'المبيعات اليومية', value: '2,500 ر.س', icon: FiDollarSign, change: { value: 5, type: 'decrease' as const }, path: '/merchant/sales' },
+    { label: 'العروض النشطة', value: '6', icon: FiShoppingBag, change: { value: 8, type: 'increase' as const }, path: '/merchant/offers' },
   ];
 
   const chartData = {
@@ -50,6 +55,29 @@ const MerchantDashboard = () => {
       },
     ],
   };
+
+  // تحديث التنقلات للصفحات الموجودة
+  const quickActions = [
+    {
+      icon: FiStar,
+      label: 'إدارة النقاط',
+      path: '/merchant/points',
+      colorScheme: 'blue'
+    },
+    {
+      icon: FiTag,
+      label: 'إدارة العروض',
+      path: '/merchant/offers',
+      colorScheme: 'green'
+    },
+    {
+      icon: FiFileText,
+      label: 'التقارير',
+      path: '/merchant/reports',
+      colorScheme: 'purple',
+      variant: 'outline'
+    }
+  ];
 
   // إضافة معالجة الأخطاء للرسم البياني
   const renderChart = () => {
@@ -65,7 +93,19 @@ const MerchantDashboard = () => {
     <Stack spacing={8}>
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
         {stats.map((stat) => (
-          <Card key={stat.label}>
+          <Card 
+            key={stat.label} 
+            cursor="pointer"
+            onClick={() => navigate(stat.path)}
+            _hover={{ 
+              transform: 'translateY(-2px)', 
+              shadow: 'md',
+              borderColor: stat.color 
+            }}
+            transition="all 0.2s"
+            borderWidth="1px"
+            borderColor="transparent"
+          >
             <CardBody>
               <Stat>
                 <StatLabel display="flex" alignItems="center">
@@ -82,6 +122,26 @@ const MerchantDashboard = () => {
           </Card>
         ))}
       </SimpleGrid>
+
+      {/* أزرار الوصول السريع محدثة */}
+      <HStack spacing={4}>
+        {quickActions.map((action) => (
+          <Button
+            key={action.path}
+            leftIcon={<Icon as={action.icon} />}
+            colorScheme={action.colorScheme}
+            variant={action.variant}
+            onClick={() => navigate(action.path)}
+            _hover={{
+              transform: 'translateY(-2px)',
+              shadow: 'md'
+            }}
+            transition="all 0.2s"
+          >
+            {action.label}
+          </Button>
+        ))}
+      </HStack>
 
       <Card>
         <CardHeader>

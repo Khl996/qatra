@@ -1,8 +1,8 @@
-import {
-  Box,
-  Flex,
-  IconButton,
+import { 
+  Box, 
+  Flex, 
   useColorModeValue,
+  IconButton,
   Text,
   Avatar,
   HStack,
@@ -17,23 +17,38 @@ import {
   Divider,
   Icon,
 } from '@chakra-ui/react';
-import {
-  FiMenu,
-  FiHome,
-  FiStar,
-  FiTag,
-  FiShoppingBag,
+import { 
+  FiMenu,  // إضافة هذا الاستيراد
+  FiHome, 
+  FiUsers, 
+  FiStar, 
+  FiTag, 
+  FiBarChart2, 
+  FiDollarSign, 
+  FiFileText, 
   FiSettings,
   FiLogOut,
   FiBell,
   FiUser,
-  FiDollarSign,
-  FiBarChart2,
   FiCalendar,
 } from 'react-icons/fi';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
+
+const theme = {
+  sidebar: {
+    width: "240px",
+    collapsedWidth: "80px",
+  },
+  topbar: {
+    height: "64px",
+    bgColor: "green.400" // لون مختلف عن لوحة المسؤول
+  },
+  layout: {
+    contentPadding: "24px"
+  }
+};
 
 const TopBar = ({ onToggle }: { onToggle: () => void }) => {
   const navigate = useNavigate();
@@ -124,6 +139,8 @@ const TopBar = ({ onToggle }: { onToggle: () => void }) => {
   );
 };
 
+export type { SidebarContentProps }; // تصدير الأنواع بشكل منفصل
+
 interface SidebarContentProps {
   onClose?: () => void;
   [key: string]: any;
@@ -134,13 +151,12 @@ const SidebarContent = ({ onClose, isVisible, ...rest }: SidebarContentProps & {
   const location = useLocation();
 
   const menuItems = [
-    { icon: FiHome, name: 'الرئيسية', path: '/merchant/dashboard' },
+    { icon: FiHome, name: 'لوحة التحكم', path: '/merchant/dashboard' },
     { icon: FiStar, name: 'إدارة النقاط', path: '/merchant/points' },
     { icon: FiTag, name: 'العروض', path: '/merchant/offers' },
     { icon: FiBarChart2, name: 'الإحصائيات', path: '/merchant/statistics' },
-    { icon: FiShoppingBag, name: 'المبيعات', path: '/merchant/sales' },
-    { icon: FiDollarSign, name: 'المالية', path: '/merchant/finance' },
-    { icon: FiCalendar, name: 'التقارير', path: '/merchant/reports' },
+    { icon: FiDollarSign, name: 'المبيعات', path: '/merchant/sales' },
+    { icon: FiFileText, name: 'التقارير', path: '/merchant/reports' },
     { icon: FiSettings, name: 'الإعدادات', path: '/merchant/settings' },
   ];
 
@@ -194,7 +210,7 @@ const SidebarContent = ({ onClose, isVisible, ...rest }: SidebarContentProps & {
   );
 };
 
-const MerchantLayout = () => {
+const MerchantLayout: React.FC = () => {
   const [isSidebarVisible, setSidebarVisible] = useState(false);
   
   const toggleSidebar = () => setSidebarVisible(!isSidebarVisible);

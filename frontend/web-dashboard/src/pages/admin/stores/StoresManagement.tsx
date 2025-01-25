@@ -1,168 +1,124 @@
-import {
-  Box,
-  Heading,
-  Card,
-  CardHeader,
-  CardBody,
-  Stack,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Badge,
-  Button,
-  HStack,
-  Input,
-  InputGroup,
-  InputLeftElement,
-  Select,
-  IconButton,
-  Flex,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-} from '@chakra-ui/react';
-import { FiSearch, FiFilter, FiMoreVertical } from 'react-icons/fi';
+import { Stack, HStack, Heading, Button, Card, CardHeader, CardBody, Tabs, TabList, Tab, Badge, SimpleGrid, Text } from '@chakra-ui/react';
 import { useState } from 'react';
-import AddStoreModal from '../../../shared/components/modals/stores/AddStoreModal';
-import StoreDetailsModal from '../../../shared/components/modals/stores/StoreDetailsModal';
+import { StoreStatsGrid } from './components/StoreStatsGrid';
+import { StoreFilters } from './components/StoreFilters';
+import { StoreCard } from './components/StoreCard';
+import Pagination from '../../../shared/components/Pagination';
+import { StoreDetailsModal } from '../../../shared/components/modals/stores/StoreDetailsModal';
 
 const StoresManagement = () => {
-  const [isAddStoreModalOpen, setIsAddStoreModalOpen] = useState(false);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedStoreId, setSelectedStoreId] = useState<number>();
-  
+  // بيانات تجريبية للمتاجر
   const stores = [
     {
       id: 1,
-      name: 'مطعم السعادة',
-      type: 'مطعم',
-      status: 'active',
-      joinDate: '2024-01-15',
+      name: "كافيه السعادة",
+      type: "مقهى",
+      owner: "أحمد محمد",
+      email: "cafe@example.com",
+      phone: "0501234567",
+      location: "الرياض - حي النرجس",
+      status: "active",
+      joinDate: "2024-01-15",
       ordersCount: 156,
-      revenue: '15,650'
+      rating: 4.8,
+      revenue: 15600,
     },
-    {
-      id: 2,
-      name: 'قهوة المختصين',
-      type: 'مقهى',
-      status: 'pending',
-      joinDate: '2024-01-22',
-      ordersCount: 0,
-      revenue: '0'
-    },
-    // يمكن إضافة المزيد من البيانات التجريبية هنا
+    // ...يمكن إضافة المزيد من البيانات التجريبية
   ];
 
-  const handleViewDetails = (storeId: number) => {
-    setSelectedStoreId(storeId);
-    setIsDetailsModalOpen(true);
+  // إضافة ترقيم الصفحات
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    itemsPerPage: 9,
+    totalItems: stores.length // تعيين القيمة الابتدائية من طول المصفوفة
+  });
+
+  // إضافة فلترة متقدمة
+  const [filters, setFilters] = useState({
+    search: '',
+    type: '',
+    status: '',
+    dateRange: { start: null, end: null }
+  });
+
+  const [selectedStore, setSelectedStore] = useState<any>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+
+  const handleStoreAction = (action: string, store: any) => {
+    switch (action) {
+      case 'view':
+        setSelectedStore(store);
+        setIsDetailsModalOpen(true);
+        break;
+      case 'edit':
+        // TODO: Implement edit functionality
+        break;
+      case 'suspend':
+        // TODO: Implement suspend functionality
+        break;
+      default:
+        break;
+    }
   };
 
   return (
     <Stack spacing={6}>
-      <Flex justify="space-between" align="center">
+      <HStack justify="space-between">
         <Heading size="lg">إدارة المتاجر</Heading>
-        <Button 
-          colorScheme="blue"
-          onClick={() => setIsAddStoreModalOpen(true)}
-        >
-          إضافة متجر جديد
-        </Button>
-      </Flex>
+        <Button colorScheme="blue">إضافة متجر جديد</Button>
+      </HStack>
+
+      <StoreStatsGrid />
+      <StoreFilters onFilterChange={filters => setFilters(filters)} />
 
       <Card>
         <CardHeader>
-          <Stack spacing={4}>
-            <Flex gap={4}>
-              <InputGroup w="300px">
-                <InputLeftElement pointerEvents="none">
-                  <FiSearch />
-                </InputLeftElement>
-                <Input placeholder="البحث عن متجر..." />
-              </InputGroup>
-              <Select placeholder="نوع المتجر" w="200px">
-                <option value="restaurant">مطعم</option>
-                <option value="cafe">مقهى</option>
-                <option value="shop">متجر</option>
-              </Select>
-              <Select placeholder="الحالة" w="200px">
-                <option value="active">نشط</option>
-                <option value="pending">قيد المراجعة</option>
-                <option value="suspended">معلق</option>
-              </Select>
-              <IconButton
-                aria-label="فلترة"
-                icon={<FiFilter />}
-                variant="outline"
-              />
-            </Flex>
-          </Stack>
+          <Tabs onChange={(index) => {
+            // Handle tab change
+            const statusFilters = ['all', 'pending', 'active', 'suspended'];
+            setFilters(prev => ({
+              ...prev,
+              status: statusFilters[index]
+            }));
+          }}>
+            <TabList>
+              <Tab>جميع المتاجر</Tab>
+              <Tab>
+                قيد المراجعة
+                <Badge ml={2} colorScheme="yellow">4</Badge>
+              </Tab>
+              <Tab>المتاجر النشطة</Tab>
+              <Tab>المتاجر الموقوفة</Tab>
+            </TabList>
+          </Tabs>
         </CardHeader>
         <CardBody>
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>اسم المتجر</Th>
-                <Th>النوع</Th>
-                <Th>الحالة</Th>
-                <Th>تاريخ الانضمام</Th>
-                <Th>عدد الطلبات</Th>
-                <Th>الإيرادات</Th>
-                <Th>الإجراءات</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {stores.map(store => (
-                <Tr key={store.id}>
-                  <Td fontWeight="medium">{store.name}</Td>
-                  <Td>{store.type}</Td>
-                  <Td>
-                    <Badge
-                      colorScheme={store.status === 'active' ? 'green' : 'yellow'}
-                    >
-                      {store.status === 'active' ? 'نشط' : 'قيد المراجعة'}
-                    </Badge>
-                  </Td>
-                  <Td>{store.joinDate}</Td>
-                  <Td isNumeric>{store.ordersCount}</Td>
-                  <Td isNumeric>{store.revenue} ر.س</Td>
-                  <Td>
-                    <Menu>
-                      <MenuButton
-                        as={IconButton}
-                        icon={<FiMoreVertical />}
-                        variant="ghost"
-                        size="sm"
-                      />
-                      <MenuList>
-                        <MenuItem onClick={() => handleViewDetails(store.id)}>عرض التفاصيل</MenuItem>
-                        <MenuItem>تعديل البيانات</MenuItem>
-                        <MenuItem>إدارة العمولات</MenuItem>
-                        <MenuItem color="red.500">تعليق المتجر</MenuItem>
-                      </MenuList>
-                    </Menu>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
+            {stores.map((store) => (
+              <StoreCard 
+                key={store.id}
+                store={store}
+                onAction={(action) => handleStoreAction(action, store)}
+              />
+            ))}
+          </SimpleGrid>
         </CardBody>
       </Card>
 
-      <AddStoreModal 
-        isOpen={isAddStoreModalOpen}
-        onClose={() => setIsAddStoreModalOpen(false)}
-      />
-      
-      <StoreDetailsModal
+      <StoreDetailsModal 
         isOpen={isDetailsModalOpen}
         onClose={() => setIsDetailsModalOpen(false)}
-        storeId={selectedStoreId}
+        store={selectedStore}
       />
+
+      <HStack justify="space-between" mt={4}>
+        <Text>إجمالي النتائج: {pagination.totalItems}</Text>
+        <Pagination
+          currentPage={pagination.currentPage}
+          totalPages={Math.ceil(pagination.totalItems / pagination.itemsPerPage)}
+          onPageChange={(page: number) => setPagination(prev => ({ ...prev, currentPage: page }))}
+        />
+      </HStack>
     </Stack>
   );
 };

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   SimpleGrid,
@@ -18,39 +20,58 @@ import {
   Th,
   Td,
   Icon,
-  HStack, // إضافة
-  Button, // إضافة
-  Badge, // إضافة
+  HStack,
+  Button,
+  Badge,
 } from '@chakra-ui/react';
 import { FiShoppingBag, FiUsers, FiDollarSign, FiCheckCircle } from 'react-icons/fi';
 import { LineChart } from '../../../shared/components/ui/charts';
+import { JoinRequestModal } from '../../../shared/components/modals/dashboard/JoinRequestModal';
+
+// إضافة واجهة للطلب
+interface JoinRequest {
+  id: number;
+  storeName: string;
+  type: string;
+  date: string;
+  status: string;
+  // يمكن إضافة المزيد من الحقول حسب الحاجة
+}
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const [selectedRequest, setSelectedRequest] = useState<JoinRequest | null>(null);
+  const [isJoinRequestModalOpen, setIsJoinRequestModalOpen] = useState(false);
+
   // بيانات تجريبية للإحصائيات
   const stats = [
     {
       label: 'إجمالي المتاجر',
       value: '156',
       icon: FiShoppingBag,
-      change: { value: 12, type: 'increase' as const }
+      change: { value: 12, type: 'increase' as const },
+      section: 'stores'
     },
     {
       label: 'المستخدمين النشطين',
       value: '2,453',
       icon: FiUsers,
-      change: { value: 8, type: 'increase' as const }
+      change: { value: 8, type: 'increase' as const },
+      section: 'users'
     },
     {
       label: 'إجمالي العمولات',
       value: '45,650 ر.س',
       icon: FiDollarSign,
-      change: { value: 15, type: 'increase' as const }
+      change: { value: 15, type: 'increase' as const },
+      section: 'finance'
     },
     {
       label: 'طلبات الانضمام',
       value: '4',
       icon: FiCheckCircle,
-      change: { value: 2, type: 'decrease' as const }
+      change: { value: 2, type: 'decrease' as const },
+      section: 'stores'
     }
   ];
 
@@ -68,7 +89,7 @@ const AdminDashboard = () => {
   };
 
   // بيانات تجريبية لطلبات الانضمام
-  const joinRequests = [
+  const joinRequests: JoinRequest[] = [
     {
       id: 1,
       storeName: 'مطعم السعادة',
@@ -85,12 +106,56 @@ const AdminDashboard = () => {
     }
   ];
 
+  // معالجة الطلبات
+  const handleAcceptRequest = async (id: number) => {
+    try {
+      // TODO: تنفيذ قبول الطلب
+      setIsJoinRequestModalOpen(false);
+      // تحديث القائمة
+    } catch (error) {
+      console.error('Error accepting request:', error);
+    }
+  };
+
+  const handleRejectRequest = async (id: number) => {
+    try {
+      // TODO: تنفيذ رفض الطلب
+      setIsJoinRequestModalOpen(false);
+      // تحديث القائمة
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+    }
+  };
+
+  // التنقل إلى الصفحات
+  const navigateToSection = (section: string) => {
+    switch (section) {
+      case 'stores':
+        navigate('/admin/stores');
+        break;
+      case 'users':
+        navigate('/admin/users');
+        break;
+      case 'finance':
+        navigate('/admin/finance');
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <Stack spacing={8}>
-      {/* إحصائيات سريعة */}
+      {/* البطاقات الإحصائية مع إضافة التنقل */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6}>
         {stats.map((stat) => (
-          <Card key={stat.label}>
+          <Card 
+            key={stat.label} 
+            cursor="pointer"
+            onClick={() => navigateToSection(stat.section)}
+            _hover={{ transform: 'translateY(-2px)', shadow: 'md' }}
+            transition="all 0.2s"
+          >
             <CardBody>
               <Stat>
                 <StatLabel display="flex" alignItems="center">
@@ -120,12 +185,16 @@ const AdminDashboard = () => {
         </CardBody>
       </Card>
 
-      {/* طلبات الانضمام الجديدة */}
+      {/* جدول طلبات الانضمام مع التفاعل */}
       <Card>
         <CardHeader>
           <HStack justify="space-between">
             <Heading size="md">طلبات الانضمام الجديدة</Heading>
-            <Button size="sm" colorScheme="blue">
+            <Button 
+              size="sm" 
+              colorScheme="blue"
+              onClick={() => navigate('/admin/stores?filter=pending')}
+            >
               عرض الكل
             </Button>
           </HStack>
@@ -143,7 +212,15 @@ const AdminDashboard = () => {
             </Thead>
             <Tbody>
               {joinRequests.map((request) => (
-                <Tr key={request.id}>
+                <Tr 
+                  key={request.id}
+                  cursor="pointer"
+                  _hover={{ bg: 'gray.50' }}
+                  onClick={() => {
+                    setSelectedRequest(request);
+                    setIsJoinRequestModalOpen(true);
+                  }}
+                >
                   <Td>{request.storeName}</Td>
                   <Td>{request.type}</Td>
                   <Td>{request.date}</Td>
@@ -166,6 +243,15 @@ const AdminDashboard = () => {
           </Table>
         </CardBody>
       </Card>
+
+      {/* إضافة المودال */}
+      <JoinRequestModal
+        isOpen={isJoinRequestModalOpen}
+        onClose={() => setIsJoinRequestModalOpen(false)}
+        request={selectedRequest}
+        onAccept={handleAcceptRequest}
+        onReject={handleRejectRequest}
+      />
     </Stack>
   );
 };

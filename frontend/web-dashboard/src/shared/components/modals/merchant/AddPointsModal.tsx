@@ -1,85 +1,92 @@
-import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, FormControl, FormLabel, Input, Text, VStack, useToast } from '@chakra-ui/react';
+import {
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalBody,
+    ModalFooter,
+    Button,
+    FormControl,
+    FormLabel,
+    Input,
+    VStack
+} from '@chakra-ui/react';
 import { useState } from 'react';
+import type { PointTransaction } from '../../../../types';
 
 interface AddPointsModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: { customerId: string; amount: number }) => Promise<void>;
+    isOpen: boolean;
+    onClose: () => void;
+    onSubmit: (data: Omit<PointTransaction, 'id' | 'date'>) => Promise<void>;
 }
 
 export const AddPointsModal = ({ isOpen, onClose, onSubmit }: AddPointsModalProps) => {
-  const [customerId, setCustomerId] = useState('');
-  const [amount, setAmount] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const toast = useToast();
+    const [formData, setFormData] = useState({
+        customerId: '',
+        amount: '',
+        points: ''
+    });
 
-  const calculatePoints = (amount: number) => Math.floor(amount / 10);
+    const handleSubmit = async () => {
+        await onSubmit({
+            customerId: formData.customerId,
+            amount: Number(formData.amount),
+            points: Number(formData.points),
+            type: 'add'
+        });
+        setFormData({ customerId: '', amount: '', points: '' });
+    };
 
-  const handleSubmit = async () => {
-    if (!customerId || !amount) {
-      toast({
-        title: "خطأ في الإدخال",
-        description: "الرجاء إدخال جميع البيانات المطلوبة",
-        status: "error",
-        duration: 3000,
-      });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await onSubmit({ customerId, amount: parseFloat(amount) });
-      toast({
-        title: "تمت العملية بنجاح",
-        status: "success",
-        duration: 3000,
-      });
-      onClose();
-    } catch (error) {
-      toast({
-        title: "حدث خطأ",
-        description: "لم يتم إضافة النقاط",
-        status: "error",
-        duration: 3000,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>إضافة نقاط</ModalHeader>
-        <ModalBody>
-          <VStack spacing={4}>
-            <FormControl>
-              <FormLabel>رقم العميل</FormLabel>
-              <Input value={customerId} onChange={(e) => setCustomerId(e.target.value)} />
-            </FormControl>
-            <FormControl>
-              <FormLabel>مبلغ الفاتورة</FormLabel>
-              <Input 
-                type="number" 
-                value={amount} 
-                onChange={(e) => setAmount(e.target.value)} 
-              />
-            </FormControl>
-            {amount && (
-              <Text color="blue.500">
-                سيتم إضافة {calculatePoints(parseFloat(amount))} نقطة
-              </Text>
-            )}
-          </VStack>
-        </ModalBody>
-        <ModalFooter>
-          <Button colorScheme="blue" mr={3} onClick={handleSubmit} isLoading={isLoading}>
-            إضافة
-          </Button>
-          <Button variant="ghost" onClick={onClose}>إلغاء</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
+    return (
+        <Modal isOpen={isOpen} onClose={onClose}>
+            <ModalOverlay />
+            <ModalContent>
+                <ModalHeader>إضافة نقاط</ModalHeader>
+                <ModalBody>
+                    <VStack spacing={4}>
+                        <FormControl>
+                            <FormLabel>رقم العميل</FormLabel>
+                            <Input 
+                                value={formData.customerId}
+                                onChange={e => setFormData(prev => ({
+                                    ...prev,
+                                    customerId: e.target.value
+                                }))}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>المبلغ</FormLabel>
+                            <Input 
+                                type="number"
+                                value={formData.amount}
+                                onChange={e => setFormData(prev => ({
+                                    ...prev,
+                                    amount: e.target.value
+                                }))}
+                            />
+                        </FormControl>
+                        <FormControl>
+                            <FormLabel>النقاط</FormLabel>
+                            <Input 
+                                type="number"
+                                value={formData.points}
+                                onChange={e => setFormData(prev => ({
+                                    ...prev,
+                                    points: e.target.value
+                                }))}
+                            />
+                        </FormControl>
+                    </VStack>
+                </ModalBody>
+                <ModalFooter>
+                    <Button colorScheme="blue" mr={3} onClick={handleSubmit}>
+                        إضافة
+                    </Button>
+                    <Button variant="ghost" onClick={onClose}>
+                        إلغاء
+                    </Button>
+                </ModalFooter>
+            </ModalContent>
+        </Modal>
+    );
 };

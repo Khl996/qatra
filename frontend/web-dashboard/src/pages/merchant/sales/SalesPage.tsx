@@ -1,123 +1,87 @@
+import { useEffect, useState } from 'react';
 import {
-  Box,
-  Card,
-  CardHeader,
-  CardBody,
-  Heading,
-  Stack,
-  HStack,
-  Select,
-  Input,
-  FormControl,
-  FormLabel,
-  Button,
-  IconButton,
-  Tooltip,
+    Box,
+    Stack,
+    Card,
+    CardHeader,
+    CardBody,
+    Heading,
+    useToast
 } from '@chakra-ui/react';
-import { useState } from 'react';
-import { FiDownload, FiFilter } from 'react-icons/fi';
+import { useAppDispatch, useAppSelector } from '../../../hooks/useAppDispatch';
 import DataTable from '../../../shared/components/ui/tables/DataTable';
+import TableFilters from '../../../shared/components/ui/tables/TableFilters';
+import StatisticsCard from '../../../shared/components/ui/statistics/StatisticsCard';
+import { FiDollarSign, FiStar } from 'react-icons/fi';
+
+interface SaleTransaction {
+    id: string;
+    amount: number;
+    points: number;
+    customerName: string;
+    date: string;
+}
 
 const SalesPage = () => {
-  const [dateRange, setDateRange] = useState({
-    from: '',
-    to: '',
-  });
+    const dispatch = useAppDispatch();
+    const toast = useToast();
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  // بيانات تجريبية للمبيعات
-  const salesData = [
-    {
-      id: '1',
-      date: '2024-01-23',
-      customerName: 'أحمد محمد',
-      amount: 500,
-      pointsEarned: 5000,
-      paymentMethod: 'بطاقة',
-      status: 'مكتمل'
-    },
-    {
-      id: '2',
-      date: '2024-01-23',
-      customerName: 'محمد علي',
-      amount: 750,
-      pointsEarned: 7500,
-      paymentMethod: 'نقداً',
-      status: 'مكتمل'
-    },
-    // يمكن إضافة المزيد من البيانات
-  ];
+    const salesData: SaleTransaction[] = []; // سيتم ربطه مع Redux لاحقاً
 
-  const columns = [
-    { key: 'date', label: 'التاريخ' },
-    { key: 'customerName', label: 'اسم العميل' },
-    { key: 'amount', label: 'المبلغ' },
-    { key: 'pointsEarned', label: 'النقاط المكتسبة' },
-    { key: 'paymentMethod', label: 'طريقة الدفع' },
-    { key: 'status', label: 'الحالة' },
-  ];
+    const columns = [
+        { header: 'العميل', accessor: 'customerName' },
+        { header: 'المبلغ', accessor: 'amount' },
+        { header: 'النقاط', accessor: 'points' },
+        { header: 'التاريخ', accessor: 'date' }
+    ];
 
-  const handleExportData = () => {
-    // TODO: تنفيذ تصدير البيانات
-    console.log('Exporting sales data...');
-  };
+    const totalSales = salesData.reduce((sum, sale) => sum + sale.amount, 0);
+    const totalPoints = salesData.reduce((sum, sale) => sum + sale.points, 0);
 
-  return (
-    <Stack spacing={6}>
-      <Card>
-        <CardHeader>
-          <HStack justify="space-between">
-            <Heading size="md">سجل المبيعات</Heading>
-            <HStack spacing={4}>
-              <Tooltip label="تصدير البيانات">
-                <IconButton
-                  aria-label="تصدير البيانات"
-                  icon={<FiDownload />}
-                  onClick={handleExportData}
-                />
-              </Tooltip>
-              <Button leftIcon={<FiFilter />}>تصفية</Button>
-            </HStack>
-          </HStack>
-        </CardHeader>
-        <CardBody>
-          <Stack spacing={6}>
-            <HStack spacing={4}>
-              <FormControl maxW="200px">
-                <FormLabel>من تاريخ</FormLabel>
-                <Input
-                  type="date"
-                  value={dateRange.from}
-                  onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-                />
-              </FormControl>
-              <FormControl maxW="200px">
-                <FormLabel>إلى تاريخ</FormLabel>
-                <Input
-                  type="date"
-                  value={dateRange.to}
-                  onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-                />
-              </FormControl>
-              <FormControl maxW="200px">
-                <FormLabel>طريقة الدفع</FormLabel>
-                <Select placeholder="الكل">
-                  <option value="cash">نقداً</option>
-                  <option value="card">بطاقة</option>
-                </Select>
-              </FormControl>
-            </HStack>
+    const handleSearch = (value: string) => {
+        console.log('Searching:', value);
+        // Implement search logic here
+    };
 
-            <DataTable
-              columns={columns}
-              data={salesData}
-              currentPage={1}
-              totalPages={1}
-            />
-          </Stack>
-        </CardBody>
-      </Card>
-    </Stack>
-  );
+    return (
+        <Stack spacing={6}>
+            <Box>
+                <Stack direction={{ base: 'column', md: 'row' }} spacing={4}>
+                    <StatisticsCard
+                        title="إجمالي المبيعات"
+                        value={`${totalSales} ر.س`}
+                        icon={FiDollarSign}
+                    />
+                    <StatisticsCard
+                        title="إجمالي النقاط"
+                        value={totalPoints}
+                        icon={FiStar}
+                    />
+                </Stack>
+            </Box>
+
+            <Card>
+                <CardHeader>
+                    <Heading size="md">سجل المبيعات</Heading>
+                </CardHeader>
+                <CardBody>
+                    <TableFilters
+                        onDateRangeChange={setDateRange}
+                        showSearch
+                        onSearch={handleSearch}
+                    />
+                    <Box mt={4}>
+                        <DataTable
+                            data={salesData}
+                            columns={columns}
+                            isLoading={false}
+                        />
+                    </Box>
+                </CardBody>
+            </Card>
+        </Stack>
+    );
 };
 
 export default SalesPage;

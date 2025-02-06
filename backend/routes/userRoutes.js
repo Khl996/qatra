@@ -4,11 +4,11 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
+const { validate, validations } = require('../middleware/validationMiddleware');
 const { authMiddleware } = require('../middleware/authMiddleware');
-const { validateUser } = require('../middleware/validationMiddleware');
 
 // المسارات العامة (بدون مصادقة)
-router.post('/register', validateUser, userController.register);
+router.post('/register', validations.user, validate, userController.register);
 router.post('/login', userController.login);
 router.post('/forgot-password', userController.forgotPassword);
 

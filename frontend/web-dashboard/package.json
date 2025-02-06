@@ -68,6 +68,7 @@
     "@types/testing-library__jest-dom": "^5.14.9",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
+    "babel-preset-expo": "^12.0.6",
     "eslint": "^8.57.1",
     "prettier": "^2.8.8"
   }

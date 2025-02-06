@@ -2,39 +2,39 @@
 // المسار: backend/models/Admin.js
 
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+const sequelize = require('../config/database');  // تغيير طريقة الاستيراد
 
 const Admin = sequelize.define('Admin', {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
+        type: DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false,
         unique: true,
-        validate: {
-            isEmail: true,
-        },
+        allowNull: false
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
     },
     role: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: 'admin',
+        type: DataTypes.ENUM('super_admin', 'admin'),
+        defaultValue: 'admin'
     },
+    status: {
+        type: DataTypes.ENUM('active', 'inactive'),
+        defaultValue: 'active'
+    }
 }, {
     timestamps: true,
     tableName: 'Admins',
+    underscored: true
 });
 
 module.exports = Admin;

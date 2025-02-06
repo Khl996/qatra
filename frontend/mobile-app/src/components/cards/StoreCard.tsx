@@ -2,18 +2,24 @@ import React from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 
 interface StoreCardProps {
+  id: string;
   name: string;
-  rating: number;
-  distance?: string;
   imageUrl: string;
+  category: string;
+  rating?: number; // جعل rating اختيارياً
+  description?: string;
+  distance?: string;
   onPress: () => void;
 }
 
 export const StoreCard: React.FC<StoreCardProps> = ({
+  id,
   name,
-  rating,
-  distance,
   imageUrl,
+  category,
+  rating,
+  description,
+  distance,
   onPress
 }) => {
   return (
@@ -27,17 +33,21 @@ export const StoreCard: React.FC<StoreCardProps> = ({
       </View>
       <View style={styles.infoContainer}>
         <Text style={styles.name} numberOfLines={1}>{name}</Text>
-        <View style={styles.ratingContainer}>
-          <View style={styles.ratingWrapper}>
-            <Image 
-              source={require('../../../assets/icons/rating_star.png')}
-              style={styles.starIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.rating}>{rating.toFixed(1)}</Text>
+        <Text style={styles.category}>{category}</Text>
+        {rating !== undefined && (
+          <View style={styles.ratingContainer}>
+            <View style={styles.ratingWrapper}>
+              <Image 
+                source={require('../../../assets/icons/rating_star.png')}
+                style={styles.starIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.rating}>{rating.toFixed(1)}</Text>
+            </View>
+            {distance && <Text style={styles.distance}>{distance}</Text>}
           </View>
-          {distance && <Text style={styles.distance}>{distance}</Text>}
-        </View>
+        )}
+        {distance && <Text style={styles.distance}>{distance}</Text>}
       </View>
     </TouchableOpacity>
   );
@@ -74,6 +84,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#2c3e50',
+    marginBottom: 4,
+  },
+  category: {
+    fontSize: 14,
+    color: '#7f8c8d',
     marginBottom: 4,
   },
   ratingContainer: {

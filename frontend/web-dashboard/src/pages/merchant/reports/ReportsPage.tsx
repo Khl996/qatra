@@ -1,143 +1,101 @@
-import {
-  Box,
-  Card,
-  CardHeader,
-  CardBody,
-  Heading,
-  Stack,
-  SimpleGrid,
-  Button,
-  Select,
-  HStack,
-  FormControl,
-  FormLabel,
-  Input,
-  Icon,
-  Text,
-} from '@chakra-ui/react';
 import { useState } from 'react';
-import { FiDownload, FiFileText, FiUsers, FiDollarSign, FiStar } from 'react-icons/fi';
+import TableFilters from '../../../shared/components/ui/tables/TableFilters';
+import {
+    Box,
+    Stack,
+    Card,
+    CardHeader,
+    CardBody,
+    Heading,
+    Tabs,
+    TabList,
+    TabPanels,
+    Tab,
+    TabPanel,
+    Button
+} from '@chakra-ui/react';
+import { LineChart } from '../../../shared/components/ui/charts';
+import DataTable from '../../../shared/components/ui/tables/DataTable';
 
 const ReportsPage = () => {
-  const [reportType, setReportType] = useState('sales');
-  const [dateRange, setDateRange] = useState({
-    from: '',
-    to: ''
-  });
+    const [activeTab, setActiveTab] = useState(0);
+    const [dateRange, setDateRange] = useState({ start: '', end: '' });
 
-  const reports = [
-    {
-      id: 'sales',
-      title: 'تقرير المبيعات',
-      icon: FiDollarSign,
-      description: 'تفاصيل المبيعات والإيرادات'
-    },
-    {
-      id: 'points',
-      title: 'تقرير النقاط',
-      icon: FiStar,
-      description: 'حركات النقاط وعمليات الاستبدال'
-    },
-    {
-      id: 'customers',
-      title: 'تقرير العملاء',
-      icon: FiUsers,
-      description: 'نشاط العملاء والنقاط المكتسبة'
-    }
-  ];
+    const handleSearch = (value: string) => {
+        // Empty handler since search is disabled
+        console.log('Search disabled');
+    };
 
-  const handleGenerateReport = () => {
-    console.log('Generating report:', {
-      type: reportType,
-      dateRange
-    });
-  };
+    const salesData = {
+        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'],
+        datasets: [{
+            label: 'المبيعات',
+            data: [12000, 19000, 15000, 22000, 18000],
+        }]
+    };
 
-  return (
-    <Stack spacing={6}>
-      <Card>
-        <CardHeader>
-          <Heading size="md">التقارير</Heading>
-        </CardHeader>
-        <CardBody>
-          <Stack spacing={6}>
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
-              {reports.map((report) => (
-                <Card
-                  key={report.id}
-                  variant="outline"
-                  cursor="pointer"
-                  onClick={() => setReportType(report.id)}
-                  bg={reportType === report.id ? 'blue.50' : 'transparent'}
-                  borderColor={reportType === report.id ? 'blue.500' : 'gray.200'}
-                >
-                  <CardBody>
-                    <Stack spacing={4}>
-                      <Icon
-                        as={report.icon}
-                        boxSize={6}
-                        color={reportType === report.id ? 'blue.500' : 'gray.500'}
-                      />
-                      <Stack spacing={1}>
-                        <Heading size="sm">{report.title}</Heading>
-                        <Text fontSize="sm" color="gray.600">
-                          {report.description}
-                        </Text>
-                      </Stack>
-                    </Stack>
-                  </CardBody>
-                </Card>
-              ))}
-            </SimpleGrid>
+    const pointsData = {
+        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو'],
+        datasets: [{
+            label: 'النقاط',
+            data: [1200, 1900, 1500, 2200, 1800],
+        }]
+    };
 
-            <Card variant="outline">
-              <CardBody>
-                <Stack spacing={6}>
-                  <Heading size="sm">خيارات التقرير</Heading>
-                  <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-                    <FormControl>
-                      <FormLabel>من تاريخ</FormLabel>
-                      <Input
-                        type="date"
-                        value={dateRange.from}
-                        onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-                      />
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>إلى تاريخ</FormLabel>
-                      <Input
-                        type="date"
-                        value={dateRange.to}
-                        onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-                      />
-                    </FormControl>
-                    <FormControl>
-                      <FormLabel>تنسيق التقرير</FormLabel>
-                      <Select defaultValue="pdf">
-                        <option value="pdf">PDF</option>
-                        <option value="excel">Excel</option>
-                      </Select>
-                    </FormControl>
-                  </SimpleGrid>
+    return (
+        <Stack spacing={6}>
+            <Card>
+                <CardHeader>
+                    <Heading size="md">التقارير</Heading>
+                </CardHeader>
+                <CardBody>
+                    <Tabs index={activeTab} onChange={setActiveTab}>
+                        <TabList>
+                            <Tab>تقرير المبيعات</Tab>
+                            <Tab>تقرير النقاط</Tab>
+                            <Tab>تقرير العملاء</Tab>
+                        </TabList>
 
-                  <HStack justify="flex-end">
-                    <Button
-                      colorScheme="blue"
-                      leftIcon={<FiDownload />}
-                      onClick={handleGenerateReport}
-                      isDisabled={!dateRange.from || !dateRange.to}
-                    >
-                      تحميل التقرير
-                    </Button>
-                  </HStack>
-                </Stack>
-              </CardBody>
+                        <TabPanels>
+                            <TabPanel>
+                                <Stack spacing={4}>
+                                    <TableFilters
+                                        onDateRangeChange={setDateRange}
+                                        showSearch={false}
+                                        onSearch={handleSearch}
+                                    />
+                                    <Box h="300px">
+                                        <LineChart data={salesData} />
+                                    </Box>
+                                    <Button colorScheme="blue">
+                                        تصدير التقرير
+                                    </Button>
+                                </Stack>
+                            </TabPanel>
+
+                            <TabPanel>
+                                <Stack spacing={4}>
+                                    <TableFilters
+                                        onDateRangeChange={setDateRange}
+                                        showSearch={false}
+                                        onSearch={handleSearch}
+                                    />
+                                    <Box h="300px">
+                                        <LineChart data={pointsData} />
+                                    </Box>
+                                    <Button colorScheme="blue">
+                                        تصدير التقرير
+                                    </Button>
+                                </Stack>
+                            </TabPanel>
+
+                            {/* يمكن إضافة المزيد من التقارير هنا */}
+                        </TabPanels>
+                    </Tabs>
+                </CardBody>
             </Card>
-          </Stack>
-        </CardBody>
-      </Card>
-    </Stack>
-  );
+        </Stack>
+    );
 };
 
 export default ReportsPage;

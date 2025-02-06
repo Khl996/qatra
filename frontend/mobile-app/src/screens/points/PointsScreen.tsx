@@ -1,68 +1,124 @@
-import React from 'react';
-import { View, ScrollView, StyleSheet, Platform, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, Text, RefreshControl, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/types';
 import { Header } from '../../components/common/Header';
-import { PointsCard } from '../../components/cards/PointsCard';
-import { PointsHistoryItem } from '../../components/cards/PointsHistoryItem';
+import { pointsService } from '../../services/pointsService';
+import { useAuth } from '../../context/AuthContext';
+import { LoadingState } from '../../components/common/LoadingState';
 
-// بيانات تجريبية - سيتم استبدالها بيانات حقيقية
-const pointsHistory = [
-  { id: '1', storeName: 'متجر البركة', points: 50, date: '2024/01/21', isEarned: true },
-  { id: '2', storeName: 'سوق الخير', points: 30, date: '2024/01/20', isEarned: true },
-  { id: '3', storeName: 'استبدال نقاط', points: 100, date: '2024/01/19', isEarned: false },
-];
+type PointsScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function PointsScreen() {
-  return (
-    <View style={styles.container}>
-      <Header 
-        username="محمد"
-        userId="12345678"
-        showNotification
-      />
-      
-      <ScrollView 
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <PointsCard points={580} level="عضو ذهبي" />
-        
-        <View style={styles.historySection}>
-          <Text style={styles.historyTitle}>سجل النقاط</Text>
-          {pointsHistory.map(item => (
-            <PointsHistoryItem
-              key={item.id}
-              storeName={item.storeName}
-              points={item.points}
-              date={item.date}
-              isEarned={item.isEarned}
+    const [isLoading, setIsLoading] = useState(true);
+    const [points, setPoints] = useState(0);
+    const [history, setHistory] = useState([]);
+    const [refreshing, setRefreshing] = useState(false);
+    const { user } = useAuth();
+    const navigation = useNavigation<PointsScreenNavigationProp>();
+
+    const loadPoints = async () => {
+        try {
+            setIsLoading(true);
+            const pointsData = await pointsService.getUserPoints();
+            setPoints(pointsData.total);
+            const historyData = await pointsService.getPointsHistory();
+            setHistory(historyData);
+        } catch (error) {
+            Alert.alert('خطأ', 'فشل في تحميل النقاط');
+        } finally {
+            setIsLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        loadPoints();
+    }, []);
+
+    if (isLoading) return <LoadingState />;
+
+    return (
+        <View style={styles.container}>
+            <Header 
+                name={user?.name || ''}
+                uniqueCode={user?.uniqueCode || ''}
+                showNotification
+                onNotificationPress={() => console.log('Notification pressed')}
+                onProfilePress={() => console.log('Profile pressed')}
             />
-          ))}
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => {
+                            setRefreshing(true);
+                            loadPoints();
+                        }}
+                    />
+                }
+                style={styles.content}
+            >
+                <View style={styles.pointsContainer}>
+                    <Text style={styles.pointsValue}>{points}</Text>
+                    <Text style={styles.pointsLabel}>نقطة</Text>
+                </View>
+                <View style={styles.historyContainer}>
+                    {history.map((item, index) => (
+                        <View key={index} style={styles.historyItem}>
+                            <Text style={styles.historyText}>{item.description}</Text>
+                            <Text style={styles.historyDate}>{item.date}</Text>
+                        </View>
+                    ))}
+                </View>
+            </ScrollView>
         </View>
-      </ScrollView>
-    </View>
-  );
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: Platform.OS === 'ios' ? 120 : 100,
-  },
-  historySection: {
-    marginTop: 16,
-  },
-  historyTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
+    container: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
+        paddingTop: 120, // زيادة padding لتبدأ الصفحة بعد البار العلوي بمسافة أكبر
+    },
+    content: {
+        flex: 1,
+        padding: 16,
+    },
+    pointsContainer: {
+        alignItems: 'center',
+        padding: 16,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        marginBottom: 16,
+    },
+    pointsValue: {
+        fontSize: 32,
+        fontWeight: 'bold',
+        color: '#2c3e50',
+    },
+    pointsLabel: {
+        fontSize: 16,
+        color: '#7f8c8d',
+    },
+    historyContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: 16,
+    },
+    historyItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 12,
+    },
+    historyText: {
+        fontSize: 16,
+        color: '#2c3e50',
+    },
+    historyDate: {
+        fontSize: 14,
+        color: '#7f8c8d',
+    },
 });

@@ -34,7 +34,8 @@ import {
 } from 'react-icons/fi';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAppSelector } from '../hooks/useAppDispatch';
 
 const theme = {
   sidebar: {
@@ -212,11 +213,22 @@ const SidebarContent = ({ onClose, isVisible, ...rest }: SidebarContentProps & {
 
 const MerchantLayout: React.FC = () => {
   const [isSidebarVisible, setSidebarVisible] = useState(false);
+  const { token, user } = useAppSelector(state => state.auth);
+  const navigate = useNavigate();
+  const bgColor = useColorModeValue('gray.100', 'gray.900');
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/merchant/login');
+    }
+  }, [token, navigate]);
+
+  if (!user) return null;
   
   const toggleSidebar = () => setSidebarVisible(!isSidebarVisible);
 
   return (
-    <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>
+    <Box minH="100vh" bg={bgColor}>
       <TopBar onToggle={toggleSidebar} />
       
       <SidebarContent 

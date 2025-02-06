@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
@@ -9,23 +9,50 @@ import {
   StatusBar
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuth } from '../../context/AuthContext';
+import { api } from '../../config/api.config';  // إضافة import
 
 interface HeaderProps {
-  username?: string;
-  userId?: string;
-  showNotification?: boolean;
-  onNotificationPress?: () => void;
-  onProfilePress?: () => void;
+  name: string;
+  uniqueCode: string;
+  showNotification: boolean;
+  onNotificationPress: () => void;
+  onProfilePress: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({ 
-  username = 'زائر', 
-  userId = '00000000',
-  showNotification = true,
+  name,
+  uniqueCode,
+  showNotification,
   onNotificationPress,
   onProfilePress
 }) => {
+  const { user } = useAuth();
+  const [notifications, setNotifications] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    if (showNotification) {
+      loadNotifications();
+    }
+  }, [showNotification]);
+
+  const loadNotifications = async () => {
+    if (!showNotification) return;
+    
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.get('/notifications');
+      setNotifications(response.data);
+    } catch (error) {
+      setError(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -41,7 +68,6 @@ export const Header: React.FC<HeaderProps> = ({
         }
       ]}>
         <View style={styles.headerContent}>
-          {/* Profile Button */}
           <TouchableOpacity 
             style={styles.profileButton}
             onPress={onProfilePress}
@@ -49,27 +75,25 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <View style={styles.avatarContainer}>
               <Image 
-                source={require('../../../assets/icons/avatar_icon.png')}
+                source={user?.avatar ? { uri: user.avatar } : require('../../../assets/icons/avatar_icon.png')}
                 style={styles.avatar}
                 resizeMode="contain"
               />
             </View>
           </TouchableOpacity>
 
-          {/* Welcome Section */}
           <View style={styles.welcomeSection}>
             <Text style={styles.welcomeText}>
               مرحباً{' '}
               <Text style={styles.usernameText}>
-                {username}
+                {name}
               </Text>
             </Text>
             <Text style={styles.userIdText}>
-              #{userId}
+              #{uniqueCode}
             </Text>
           </View>
 
-          {/* Notification Button */}
           {showNotification && (
             <TouchableOpacity 
               style={styles.notificationButton}
@@ -82,10 +106,11 @@ export const Header: React.FC<HeaderProps> = ({
                   style={styles.notificationIcon}
                   resizeMode="contain"
                 />
-                {/* Notification Badge */}
-                <View style={styles.notificationBadge}>
-                  <Text style={styles.badgeText}>2</Text>
-                </View>
+                {notifications.length > 0 && (
+                  <View style={styles.notificationBadge}>
+                    <Text style={styles.badgeText}>{notifications.length}</Text>
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
           )}

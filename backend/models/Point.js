@@ -2,40 +2,47 @@
 // المسار: backend/models/Point.js
 
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+const sequelize = require('../config/database');
 
 const Point = sequelize.define('Point', {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
+        type: DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true
     },
     userId: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'Users',
-            key: 'id',
-            onDelete: 'CASCADE', // إضافة الحذف المتسلسل
-        },
+        field: 'user_id'
     },
     storeId: {
-        type: DataTypes.UUID,
+        type: DataTypes.INTEGER,
         allowNull: false,
-        references: {
-            model: 'Stores',
-            key: 'id',
-        },
+        field: 'store_id'
     },
     points: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 0,
+        defaultValue: 0
     },
+    transactionAmount: {
+        type: DataTypes.DECIMAL(10, 2),
+        allowNull: false,
+        field: 'transaction_amount' // تحديد اسم العمود في قاعدة البيانات
+    },
+    description: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
+    status: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: 'completed'
+    }
 }, {
     timestamps: true,
-    tableName: 'Points',
+    underscored: true, // استخدام underscore في أسماء الأعمدة
+    tableName: 'Points'
 });
 
 module.exports = Point;

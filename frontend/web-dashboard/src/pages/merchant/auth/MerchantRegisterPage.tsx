@@ -21,43 +21,43 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { FiUpload } from 'react-icons/fi';
 import { useDropzone } from 'react-dropzone';
+import { useAppDispatch, useAppSelector } from '../../../hooks/useAppDispatch';
+import { register } from '../../../store/slices/authSlice';
 
 interface RegisterFormData {
-  storeName: string;
-  ownerName: string;
-  email: string;
-  phone: string;
-  storeType: string;
+  name: string;
   description: string;
-  logo?: File;
-  attachments?: File[];
-  location: {
-    lat: number;
-    lng: number;
-    address: string;
+  phone: string;
+  email: string;
+  category: string;
+  password: string;
+  location?: {
+    type: 'Point';
+    coordinates: [number, number];
   };
+  address?: string;
+  workingHours?: Record<string, string>;
+  logo?: File;
+  attachments?: File[];  // إضافة المرفقات
 }
 
 const MerchantRegisterPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Partial<RegisterFormData>>({});
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { isLoading } = useAppSelector(state => state.auth);
+  const [errors, setErrors] = useState<Partial<RegisterFormData>>({});
   const toast = useToast();
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState<RegisterFormData>({
-    storeName: '',
-    ownerName: '',
-    email: '',
-    phone: '',
-    storeType: '',
+    name: '',
     description: '',
-    logo: undefined,
-    attachments: [],
-    location: {
-      lat: 0,
-      lng: 0,
-      address: '',
-    },
+    phone: '',
+    email: '',
+    category: '',
+    password: '',
+    address: '',
+    attachments: []  // تهيئة المصفوفة
   });
 
   const storeTypes = [
@@ -104,50 +104,67 @@ const MerchantRegisterPage = () => {
     setFormData(prev => ({
       ...prev,
       location: {
-        address,
-        lat,
-        lng
-      }
+        type: 'Point',
+        coordinates: [lng, lat]
+      },
+      address
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // التحقق من صحة البيانات
+    
+    // التحقق من صحة البيانات الأساسية فقط
     const newErrors: Partial<RegisterFormData> = {};
-    if (!formData.storeName) newErrors.storeName = 'اسم المتجر مطلوب';
-    if (!formData.ownerName) newErrors.ownerName = 'اسم المالك مطلوب';
+    if (!formData.name) newErrors.name = 'اسم المتجر مطلوب';
     if (!formData.email) newErrors.email = 'البريد الإلكتروني مطلوب';
     if (!formData.phone) newErrors.phone = 'رقم الهاتف مطلوب';
-    if (!formData.storeType) newErrors.storeType = 'نوع المتجر مطلوب';
+    if (!formData.password) newErrors.password = 'كلمة المرور مطلوبة';
+    if (!formData.category) newErrors.category = 'نوع المتجر مطلوب';
 
     if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
+        setErrors(newErrors);
+        return;
     }
 
-    setIsLoading(true);
+    setSubmitting(true);
+
+    // تحويل البيانات إلى FormData
+    const formDataToSend = new FormData();
+    formDataToSend.append('name', formData.name);
+    formDataToSend.append('email', formData.email);
+    formDataToSend.append('phone', formData.phone);
+    formDataToSend.append('password', formData.password);
+    formDataToSend.append('category', formData.category);
+    formDataToSend.append('description', formData.description || '');
+    if (formData.logo) {
+        formDataToSend.append('logo', formData.logo);
+    }
+
+    // إضافة المرفقات
+    if (formData.attachments && formData.attachments.length > 0) {
+        formData.attachments.forEach((file, index) => {
+            formDataToSend.append(`attachments[${index}]`, file);
+        });
+    }
+
     try {
-      // TODO: تنفيذ عملية التسجيل
-      console.log('Register data:', formData);
-      toast({
-        title: 'تم إرسال الطلب بنجاح',
-        description: 'سيتم مراجعة طلبك والرد عليك قريباً',
-        status: 'success',
-        duration: 5000,
-        isClosable: true,
-      });
-      navigate('/merchant/register-success');
-    } catch (error) {
-      toast({
-        title: 'خطأ في التسجيل',
-        description: 'حدث خطأ أثناء تسجيل المتجر، يرجى المحاولة مرة أخرى',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+        await dispatch(register(formDataToSend)).unwrap();
+        toast({
+            title: 'تم إرسال الطلب بنجاح',
+            status: 'success',
+            duration: 3000,
+        });
+        navigate('/merchant/register-success');
+    } catch (error: any) {
+        toast({
+            title: 'خطأ في التسجيل',
+            description: error.message || 'حدث خطأ أثناء تسجيل المتجر',
+            status: 'error',
+            duration: 3000,
+        });
     } finally {
-      setIsLoading(false);
+        setSubmitting(false);
     }
   };
 
@@ -164,22 +181,23 @@ const MerchantRegisterPage = () => {
         <Text>أدخل بيانات متجرك للانضمام إلى نظام قطرة</Text>
 
         <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} w="full">
-          <FormControl isInvalid={!!errors.storeName}>
+          <FormControl isInvalid={!!errors.name}>
             <FormLabel>اسم المتجر</FormLabel>
             <Input
-              value={formData.storeName}
-              onChange={(e) => setFormData({ ...formData, storeName: e.target.value })}
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             />
-            <FormErrorMessage>{errors.storeName}</FormErrorMessage>
+            <FormErrorMessage>{errors.name}</FormErrorMessage>
           </FormControl>
 
-          <FormControl isInvalid={!!errors.ownerName}>
-            <FormLabel>اسم المالك</FormLabel>
+          <FormControl isInvalid={!!errors.password}>
+            <FormLabel>كلمة المرور</FormLabel>
             <Input
-              value={formData.ownerName}
-              onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })}
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             />
-            <FormErrorMessage>{errors.ownerName}</FormErrorMessage>
+            <FormErrorMessage>{errors.password}</FormErrorMessage>
           </FormControl>
 
           <FormControl isInvalid={!!errors.email}>
@@ -202,12 +220,12 @@ const MerchantRegisterPage = () => {
             <FormErrorMessage>{errors.phone}</FormErrorMessage>
           </FormControl>
 
-          <FormControl isInvalid={!!errors.storeType}>
+          <FormControl isInvalid={!!errors.category}>
             <FormLabel>نوع المتجر</FormLabel>
             <Select
               placeholder="اختر نوع المتجر"
-              value={formData.storeType}
-              onChange={(e) => setFormData({ ...formData, storeType: e.target.value })}
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
             >
               {storeTypes.map((type) => (
                 <option key={type.value} value={type.value}>
@@ -215,7 +233,7 @@ const MerchantRegisterPage = () => {
                 </option>
               ))}
             </Select>
-            <FormErrorMessage>{errors.storeType}</FormErrorMessage>
+            <FormErrorMessage>{errors.category}</FormErrorMessage>
           </FormControl>
 
           <FormControl>
@@ -306,13 +324,10 @@ const MerchantRegisterPage = () => {
             <FormLabel>عنوان المتجر</FormLabel>
             <Input 
               placeholder="ابحث عن موقع متجرك"
-              value={formData.location.address}
+              value={formData.address}
               onChange={(e) => setFormData(prev => ({
                 ...prev,
-                location: {
-                  ...prev.location,
-                  address: e.target.value
-                }
+                address: e.target.value
               }))}
             />
             <Text fontSize="xs" color="gray.500" mt={1}>
@@ -332,7 +347,7 @@ const MerchantRegisterPage = () => {
           colorScheme="blue"
           size="lg"
           width="full"
-          isLoading={isLoading}
+          isLoading={submitting}
         >
           تسجيل المتجر
         </Button>

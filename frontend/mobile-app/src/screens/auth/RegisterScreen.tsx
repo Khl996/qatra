@@ -4,15 +4,20 @@ import {
   StyleSheet, 
   ScrollView,
   Text,
-  TouchableOpacity,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FormInput } from '../../components/common/FormInput';
 import { AuthButton } from '../../components/common/AuthButton';
 import { useAuth } from '../../context/AuthContext';
 import { validatePhone, validateEmail, validateName } from '../../services/authService';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AuthStackParamList } from '../../navigation/types';
+
+type RegisterScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Register'>;
 
 interface FormData {
   name: string;
@@ -26,9 +31,10 @@ export default function RegisterScreen() {
     phone: '',
     email: '',
   });
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
   const [errors, setErrors] = useState<Partial<FormData>>({});
 
+  const navigation = useNavigation<RegisterScreenNavigationProp>();
   const { register, isLoading } = useAuth();
 
   const validateForm = (): boolean => {
@@ -51,12 +57,13 @@ export default function RegisterScreen() {
     if (!validateForm()) return;
 
     try {
-      await register(formData);
-      // سيتم التنقل تلقائياً عند نجاح التسجيل
-    } catch (err) {
-      setErrors({ 
-        email: 'حدث خطأ أثناء التسجيل' 
+      await register({
+        ...formData,
+        password
       });
+      navigation.navigate('Login');
+    } catch (err: any) {
+      Alert.alert('خطأ', err.message);
     }
   };
 
@@ -98,21 +105,27 @@ export default function RegisterScreen() {
               error={errors.email}
             />
 
+            <FormInput
+              label="كلمة المرور"
+              value={password}
+              onChangeText={setPassword}
+              placeholder="******"
+              secureTextEntry
+            />
+
             <AuthButton
               title="إنشاء حساب"
               onPress={handleRegister}
-              loading={loading}
+              loading={isLoading}
               style={styles.registerButton}
             />
 
-            <TouchableOpacity style={styles.loginLink}>
-              <Text style={styles.loginText}>
-                لديك حساب بالفعل؟{' '}
-                <Text style={styles.loginLinkText}>
-                  تسجيل الدخول
-                </Text>
-              </Text>
-            </TouchableOpacity>
+            <AuthButton
+              title="لدي حساب بالفعل"
+              onPress={() => navigation.navigate('Login')}
+              style={styles.loginButton}
+              textStyle={styles.loginButtonText}
+            />
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -165,4 +178,11 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '600',
   },
+  loginButton: {
+    backgroundColor: 'transparent',
+    marginTop: 10
+  },
+  loginButtonText: {
+    color: '#007AFF'
+  }
 });

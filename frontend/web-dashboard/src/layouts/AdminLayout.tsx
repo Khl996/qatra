@@ -1,3 +1,8 @@
+// استيرادات React Router
+import { Routes, Route, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+
+// استيرادات Chakra UI
 import {
   Box,
   Flex,
@@ -15,7 +20,6 @@ import {
   Badge,
   Divider,
   useDisclosure,
-  Collapse,
   Drawer,
   DrawerBody,
   DrawerHeader,
@@ -32,8 +36,10 @@ import {
   List,
   ListItem,
   useToast,
-  Button,  // إضافة Button هنا
+  Button,
 } from '@chakra-ui/react';
+
+// استيرادات الأيقونات
 import {
   FiMenu,
   FiHome,
@@ -47,8 +53,17 @@ import {
   FiGrid,
   FiUser,
 } from 'react-icons/fi';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+
+// استيرادات الصفحات
+import AdminDashboard from '../pages/admin/dashboard/AdminDashboard';
+import StoresManagement from '../pages/admin/stores/StoresManagement';
+import UsersManagement from '../pages/admin/users/UsersManagement';
+import SystemReports from '../pages/admin/reports/SystemReports';
+import api from '../services/api'; // تصحيح المسار
+import FinanceManagement from '../pages/admin/finance/FinanceManagement';
+import SystemSettings from '../pages/admin/settings/SystemSettings';
+import SystemManagement from '../pages/admin/system/SystemManagement';
+import StoreDetails from '../pages/admin/stores/StoreDetails';
 
 // تحديث الثيم
 const theme = {
@@ -81,16 +96,32 @@ interface SidebarProps {
   onClose: () => void;
 }
 
+// إضافة واجهات TypeScript
+interface Notification {
+  id: number;
+  title: string;
+  desc: string;
+  time: string;
+  type: 'store' | 'report' | 'system';
+}
+
 const TopBar = ({ onToggleSidebar, isSidebarOpen }: TopBarProps) => {
   const navigate = useNavigate();
   const toast = useToast();
   const borderColor = useColorModeValue('blue.300', 'blue.600');
+  const [notifications, setNotifications] = useState<Notification[]>([]); // إضافة النوع
 
-  const notifications = [
-    { id: 1, title: 'طلب متجر جديد', desc: 'طلب انضمام من مطعم السعادة', time: '5 دقائق', type: 'store' },
-    { id: 2, title: 'تقرير جديد', desc: 'تم إصدار تقرير المبيعات الشهري', time: '30 دقيقة', type: 'report' },
-    { id: 3, title: 'تنبيه نظام', desc: 'تحديث جديد متوفر للنظام', time: '1 ساعة', type: 'system' },
-  ];
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await api.get('/api/admin/notifications');
+        setNotifications(response.data);
+      } catch (error) {
+        console.error('Error fetching notifications:', error);
+      }
+    };
+    fetchNotifications();
+  }, []);
 
   const handleNotificationClick = (type: string, id: number) => {
     switch (type) {
@@ -177,7 +208,7 @@ const TopBar = ({ onToggleSidebar, isSidebarOpen }: TopBarProps) => {
               <PopoverHeader fontWeight="bold">الإشعارات</PopoverHeader>
               <PopoverBody p={0}>
                 <List>
-                  {notifications.map((notification) => (
+                  {notifications.map((notification: Notification) => (
                     <ListItem
                       key={notification.id}
                       p={3}
@@ -235,6 +266,20 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const location = useLocation();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
+  const [pendingStores, setPendingStores] = useState(0);
+  
+  useEffect(() => {
+    const fetchPendingStores = async () => {
+      try {
+        const response = await api.get('/api/admin/dashboard/stats');
+        setPendingStores(response.data.pendingStoresCount);
+      } catch (error) {
+        console.error('Error fetching pending stores:', error);
+      }
+    };
+
+    fetchPendingStores();
+  }, []);
 
   const menuItems = [
     { icon: FiHome, name: 'الرئيسية', path: '/admin/dashboard' },
@@ -296,9 +341,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
             <Text fontSize="sm">
               {item.name}
             </Text>
-            {item.path === '/admin/stores' && (
+            {item.path === '/admin/stores' && pendingStores > 0 && (
               <Badge ml="auto" colorScheme="red" fontSize="xs">
-                2
+                {pendingStores}
               </Badge>
             )}
           </Flex>
@@ -348,75 +393,48 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   );
 };
 
-// تحسين التنقل
-const Navigate = () => {
+// تعديل مكون التنقل
+const BreadcrumbNavigation = () => {
   const location = useLocation();
-  const [breadcrumbs, setBreadcrumbs] = useState<string[]>([]);
+  const [paths, setPaths] = useState<string[]>([]);
   
   useEffect(() => {
-    const paths = location.pathname.split('/').filter(Boolean);
-    setBreadcrumbs(paths);
+    setPaths(location.pathname.split('/').filter(Boolean));
   }, [location]);
   
-  return breadcrumbs;
+  return <>{paths.join(' / ')}</>;
 };
 
 const AdminLayout = () => {
-  const { isOpen, onToggle, onClose } = useDisclosure({ defaultIsOpen: true });
-  const bgColor = useColorModeValue('gray.50', 'gray.900');
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const isMobile = useBreakpointValue({ base: true, lg: false });
 
-  // إضافة مراقب التفاعل مع المحتوى
-  useEffect(() => {
-    const handleContentClick = () => {
-      if (isMobile) {
-        onClose();
-      }
-    };
-
-    // إضافة مراقب النقر على المحتوى
-    const content = document.getElementById('main-content');
-    if (content) {
-      content.addEventListener('click', handleContentClick);
-    }
-
-    // إضافة مراقب التمرير
-    const handleScroll = () => {
-      if (window.scrollY > 10) { // إذا تم التمرير لأكثر من 10 بكسل
-        onClose();
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-
-    // تنظيف المراقبين عند إزالة المكون
-    return () => {
-      if (content) {
-        content.removeEventListener('click', handleContentClick);
-      }
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [isMobile, onClose]);
-
   return (
-    <Box minH="100vh" bg={bgColor}>
-      <TopBar onToggleSidebar={onToggle} isSidebarOpen={isOpen} />
+    <Box h="100vh" overflow="hidden">
+      <TopBar onToggleSidebar={isOpen ? onClose : onOpen} isSidebarOpen={isOpen} />
       <Sidebar isOpen={isOpen} onClose={onClose} />
+      
       <Box
-        id="main-content" // إضافة معرف للمحتوى
-        marginRight={{ base: 0, lg: isOpen ? theme.sidebar.width : 0 }} // تغيير من marginLeft إلى marginRight
-        transition="all 0.2s"
-        minH={`calc(100vh - ${theme.topbar.height})`}
-        mt={theme.topbar.height}    // تعديل هنا
-        p={theme.layout.contentPadding}
         position="relative"
-        onClick={(e) => {
-          // إغلاق السايدبار فقط إذا تم النقر على المحتوى الرئيسي مباشرة
-          if (e.currentTarget === e.target) {
-            onClose();
-          }
-        }}
+        mr={{ base: 0, lg: isOpen ? theme.sidebar.width : 0 }}
+        transition="all 0.3s ease"
+        pt={theme.topbar.height}
+        h={`calc(100vh - ${theme.topbar.height})`}
+        overflow="auto"
+        px={theme.layout.contentPadding}
       >
-        <Outlet />
+        <Routes>
+          <Route path="/" element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="stores" element={<StoresManagement />} />
+          <Route path="stores/:storeId" element={<StoreDetails />} />
+          <Route path="users" element={<UsersManagement />} />
+          <Route path="reports" element={<SystemReports />} />
+          <Route path="finance" element={<FinanceManagement />} />
+          <Route path="settings" element={<SystemSettings />} />
+          <Route path="system" element={<SystemManagement />} />
+          <Route path="*" element={<Navigate to="dashboard" replace />} />
+        </Routes>
       </Box>
     </Box>
   );

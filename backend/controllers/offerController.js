@@ -2,36 +2,106 @@
 // المسار: backend/controllers/offerController.js
 
 const Offer = require('../models/Offer');
+const Store = require('../models/Store');
+const logger = require('../config/logger');
 
-exports.createOffer = async (req, res) => {
-    const { title, description, discount, storeId } = req.body;
+const offerController = {
+    getAllOffers: async (req, res) => {
+        try {
+            const offers = await Offer.findAll({
+                where: { 
+                    status: 'active',
+                    endDate: {
+                        [Op.gt]: new Date()
+                    }
+                },
+                include: [{
+                    model: Store,
+                    attributes: ['name', 'id', 'imageUrl']
+                }],
+                order: [['createdAt', 'DESC']]
+            });
 
-    try {
-        const newOffer = await Offer.create({ title, description, discount, storeId });
-        console.log('Offer created successfully');
-        res.status(201).json({ message: 'Offer created successfully', offer: newOffer });
-    } catch (error) {
-        console.error('Error creating offer:', error);
-        res.status(500).json({ message: 'Error creating offer', error: error.message });
+            res.json(offers);
+        } catch (error) {
+            logger.error('Error fetching offers:', error);
+            res.status(500).json({ message: 'خطأ في جلب العروض' });
+        }
+    },
+
+    getOfferById: async (req, res) => {
+        try {
+            const offer = await Offer.findByPk(req.params.id, {
+                include: [{ 
+                    model: Store,
+                    attributes: ['name', 'id'] 
+                }]
+            });
+            if (!offer) {
+                return res.status(404).json({ message: 'العرض غير موجود' });
+            }
+            res.json(offer);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    createOffer: async (req, res) => {
+        try {
+            const { title, description, discount, startDate, endDate } = req.body;
+            const offer = await Offer.create({
+                title,
+                description,
+                discount,
+                startDate,
+                endDate,
+                storeId: req.store.id
+            });
+            res.status(201).json(offer);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    updateOffer: async (req, res) => {
+        try {
+            const offer = await Offer.findOne({
+                where: { 
+                    id: req.params.id,
+                    storeId: req.store.id 
+                }
+            });
+
+            if (!offer) {
+                return res.status(404).json({ message: 'العرض غير موجود' });
+            }
+
+            await offer.update(req.body);
+            res.json(offer);
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    deleteOffer: async (req, res) => {
+        try {
+            const offer = await Offer.findOne({
+                where: { 
+                    id: req.params.id,
+                    storeId: req.store.id 
+                }
+            });
+
+            if (!offer) {
+                return res.status(404).json({ message: 'العرض غير موجود' });
+            }
+
+            await offer.destroy();
+            res.json({ message: 'تم حذف العرض بنجاح' });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
     }
 };
 
-exports.getAllOffers = async (req, res) => {
-    try {
-        const offers = await Offer.findAll();
-        res.status(200).json({ message: 'All offers retrieved successfully', offers });
-    } catch (error) {
-        res.status(500).json({ message: 'Error retrieving offers', error: error.message });
-    }
-};
-
-exports.getStoreOffers = async (req, res) => {
-    const { storeId } = req.params;
-
-    try {
-        const storeOffers = await Offer.findAll({ where: { storeId } });
-        res.status(200).json({ message: 'Store offers retrieved successfully', offers: storeOffers });
-    } catch (error) {
-        res.status(500).json({ message: 'Error retrieving store offers', error: error.message });
-    }
-};
+module.exports = offerController;

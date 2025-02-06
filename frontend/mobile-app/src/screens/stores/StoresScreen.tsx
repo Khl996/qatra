@@ -1,74 +1,100 @@
-import React from 'react';
-import { View, ScrollView, StyleSheet, Platform } from 'react-native';
-import { Header } from '../../components/common/Header';
-import { SearchBar } from '../../components/common/SearchBar';
-import { StoreCard } from '../../components/cards/StoreCard';
+import React, { useState, useEffect } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../navigation/types';
+import { Header, SearchBar, StoreCard, LoadingState } from '../../components';
+import { storeService, Store } from '../../services/storeService';
+import { useAuth } from '../../context/AuthContext';
+import * as Location from 'expo-location';
 
-const allStores = [
-  { id: '1', name: 'متجر البركة', rating: 4.5, distance: '0.5 كم', imageUrl: 'https://example.com/store1.jpg' },
-  { id: '2', name: 'سوق الخير', rating: 4.8, distance: '0.8 كم', imageUrl: 'https://example.com/store2.jpg' },
-  { id: '3', name: 'متجر السعادة', rating: 4.2, distance: '1.2 كم', imageUrl: 'https://example.com/store3.jpg' },
-  // يمكن إضافة المزيد من المتاجر هنا
-];
+type StoresScreenNavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function StoresScreen() {
-  const handleSearch = (text: string) => {
-    console.log('Searching:', text);
-  };
+    const [isLoading, setIsLoading] = useState(true);
+    const [stores, setStores] = useState<Store[]>([]);
+    const [refreshing, setRefreshing] = useState(false);
+    const { user } = useAuth();
+    const navigation = useNavigation<StoresScreenNavigationProp>();
 
-  const handleStorePress = (storeId: string) => {
-    console.log('Store pressed:', storeId);
-  };
+    const loadStores = async () => {
+        try {
+            setIsLoading(true);
+            const { status } = await Location.requestForegroundPermissionsAsync();
+            
+            if (status === 'granted') {
+                const location = await Location.getCurrentPositionAsync({});
+                const { data } = await storeService.getNearbyStores(
+                    location.coords.latitude,
+                    location.coords.longitude
+                );
+                setStores(data);
+            } else {
+                // إذا لم يتم منح الإذن، نجلب المتاجر بدون موقع
+                const { data } = await storeService.getAllStores();
+                setStores(data);
+            }
+        } catch (error) {
+            Alert.alert('خطأ', 'فشل في تحميل المتاجر');
+        } finally {
+            setIsLoading(false);
+            setRefreshing(false);
+        }
+    };
 
-  return (
-    <View style={styles.container}>
-      <Header 
-        username="محمد"
-        userId="12345678"
-        showNotification
-      />
-      
-      <ScrollView 
-        style={styles.content}
-        contentContainerStyle={styles.scrollContent}
-      >
-        <SearchBar onSearch={handleSearch} />
-        
-        <View style={styles.storesGrid}>
-          {allStores.map(store => (
-            <View key={store.id} style={styles.storeCardWrapper}>
-              <StoreCard
-                {...store}
-                onPress={() => handleStorePress(store.id)}
-              />
-            </View>
-          ))}
+    useEffect(() => {
+        loadStores();
+    }, []);
+
+    if (isLoading) return <LoadingState />;
+
+    return (
+        <View style={styles.container}>
+            <Header 
+                name={user?.name || ''}
+                uniqueCode={user?.uniqueCode || ''}
+                showNotification
+                onNotificationPress={() => console.log('Notification pressed')}
+                onProfilePress={() => console.log('Profile pressed')}
+            />
+            <SearchBar onSearch={(text) => console.log('Searching:', text)} />
+            <ScrollView
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={() => {
+                            setRefreshing(true);
+                            loadStores();
+                        }}
+                    />
+                }
+                style={styles.content}
+            >
+                {stores.map((store) => (
+                    <StoreCard
+                        key={store.id}
+                        {...store}
+                        rating={store.rating || 0}
+                        onPress={() => 
+                            navigation.navigate('StoreDetails', { 
+                                id: store.id.toString() 
+                            })
+                        }
+                    />
+                ))}
+            </ScrollView>
         </View>
-      </ScrollView>
-    </View>
-  );
+    );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  content: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: Platform.OS === 'ios' ? 120 : 100,
-    paddingHorizontal: 16,
-  },
-  storesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
-    paddingVertical: 16,
-  },
-  storeCardWrapper: {
-    width: '48%',
-    marginBottom: 16,
-  }
+    container: {
+        flex: 1,
+        backgroundColor: '#f5f5f5',
+        paddingTop: 120, // زيادة padding لتبدأ الصفحة بعد البار العلوي بمسافة أكبر
+    },
+    content: {
+        flex: 1,
+        padding: 16,
+    }
 });

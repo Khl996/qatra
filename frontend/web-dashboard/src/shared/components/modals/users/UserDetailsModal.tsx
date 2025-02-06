@@ -35,10 +35,14 @@ import { FiMail, FiPhone, FiMapPin, FiCalendar } from 'react-icons/fi';
 interface UserDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  userId?: number;
+  userId: string;  // تغيير من user object إلى userId
 }
 
-const UserDetailsModal = ({ isOpen, onClose, userId }: UserDetailsModalProps) => {
+export const UserDetailsModal: React.FC<UserDetailsModalProps> = ({
+  isOpen,
+  onClose,
+  userId
+}) => {
   // بيانات تجريبية للمستخدم
   const userData = {
     id: 1,

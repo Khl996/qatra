@@ -1,12 +1,29 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AuthState, User } from '../types/auth';
+import { AuthState, User, LoginCredentials } from '../types/auth';
+import { checkNetworkConnection } from '../utils/networkManager';
+import requestManager from '../services/requestManager';
+import { cacheManager } from '../utils/cacheManager';
+import { handleApiError } from '../utils/apiErrorHandler';
+import { api } from '../config/api.config';  // إضافة import للـ api
 
-interface AuthContextType extends AuthState {
-  login: (phone: string) => Promise<void>;
-  register: (userData: Partial<User>) => Promise<void>;
-  logout: () => Promise<void>;
-  verifyOtp: (otp: string) => Promise<void>;
+// تعريف نوع بيانات التسجيل
+interface RegisterData {
+    name: string;
+    email: string;
+    phone: string;
+    password: string;
+}
+
+interface AuthContextType {
+    isLoading: boolean;
+    token: string | null;
+    user: User | null;
+    register: (data: RegisterData) => Promise<void>;
+    login: (credentials: LoginCredentials) => Promise<void>;
+    logout: () => Promise<void>;
+    verifyOtp: (otp: string) => Promise<void>;
+    checkAuth: () => Promise<void>;
 }
 
 const initialState: AuthState = {
@@ -36,34 +53,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const login = async (phone: string) => {
+  const login = async (credentials: LoginCredentials) => {
     try {
-      // سيتم إضافة طلب API هنا
       dispatch({ type: 'LOADING', isLoading: true });
-      await new Promise(resolve => setTimeout(resolve, 1000)); // محاكاة طلب API
+      const response = await requestManager.post('/auth/login', credentials);
       
-      // بيانات تجريبية
-      const fakeUser = {
-        id: '1',
-        name: 'محمد أحمد',
-        phone,
-        email: 'mohammed@example.com',
-        points: 100
-      };
-      const fakeToken = 'fake_token_123';
+      if (response.data.token && response.data.user) {
+        await AsyncStorage.multiSet([
+          ['auth_token', response.data.token],
+          ['user', JSON.stringify(response.data.user)]
+        ]);
 
-      await AsyncStorage.setItem('auth_token', fakeToken);
-      await AsyncStorage.setItem('user', JSON.stringify(fakeUser));
-      
-      dispatch({ type: 'SIGN_IN', token: fakeToken, user: fakeUser });
+        dispatch({ 
+          type: 'SIGN_IN', 
+          token: response.data.token,
+          user: response.data.user
+        });
+      } else {
+        throw new Error('Invalid response from server');
+      }
     } catch (error) {
       console.error('Login error:', error);
       throw error;
+    } finally {
+      dispatch({ type: 'LOADING', isLoading: false });
     }
   };
 
-  const register = async (userData: Partial<User>) => {
-    // سيتم إضافة منطق التسجيل
+  const register = async (data: RegisterData) => {
+    try {
+        dispatch({ type: 'LOADING', isLoading: true });
+        console.log('Sending register request with data:', data);
+        
+        const response = await requestManager.post('/auth/register', data);
+        console.log('Register response:', response.data);
+
+        if (response.data.token) {
+            await AsyncStorage.multiSet([
+                ['auth_token', response.data.token],
+                ['user', JSON.stringify(response.data.user)]
+            ]);
+
+            dispatch({ 
+                type: 'SIGN_IN',
+                token: response.data.token,
+                user: response.data.user 
+            });
+        }
+    } catch (error: any) {
+        console.error('Register error:', error.response || error);
+        throw new Error(
+            error.response?.data?.message || 
+            'فشل الاتصال بالخادم. يرجى المحاولة مرة أخرى'
+        );
+    } finally {
+        dispatch({ type: 'LOADING', isLoading: false });
+    }
   };
 
   const logout = async () => {
@@ -81,6 +126,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // سيتم إضافة منطق التحقق من OTP
   };
 
+  const checkAuth = async () => {
+    try {
+      const token = await AsyncStorage.getItem('auth_token');
+      if (!token) {
+        dispatch({ type: 'SIGN_OUT' });
+        return;
+      }
+
+      const response = await api.get('/auth/verify-token');
+      if (response.data.user) {
+        dispatch({ 
+          type: 'SIGN_IN',
+          token,
+          user: response.data.user
+        });
+      } else {
+        await AsyncStorage.removeItem('auth_token');
+        dispatch({ type: 'SIGN_OUT' });
+      }
+    } catch (error) {
+      await AsyncStorage.removeItem('auth_token');
+      dispatch({ type: 'SIGN_OUT' });
+    }
+  };
+
   return (
     <AuthContext.Provider 
       value={{ 
@@ -88,7 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         login, 
         register, 
         logout,
-        verifyOtp
+        verifyOtp,
+        checkAuth // إضافة هنا
       }}
     >
       {children}

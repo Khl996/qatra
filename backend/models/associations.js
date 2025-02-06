@@ -3,8 +3,8 @@
 
 const User = require('./User');
 const Store = require('./Store');
+const Point = require('./Point'); // تعديل الاستيراد
 const Offer = require('./Offer');
-const Point = require('./Point');
 const Purchase = require('./Purchase');
 const Review = require('./Review');
 

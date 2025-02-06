@@ -2,7 +2,7 @@
 // المسار: backend/models/Purchase.js
 
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+const sequelize = require('../config/database');  // تصحيح الاستيراد
 
 const Purchase = sequelize.define('Purchase', {
     id: {

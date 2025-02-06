@@ -2,49 +2,47 @@
 // المسار: backend/models/Store.js
 
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
-const Point = require('./Point');
+const sequelize = require('../config/database');  // تصحيح الاستيراد
 
 const Store = sequelize.define('Store', {
     id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
+        type: DataTypes.INTEGER,
         primaryKey: true,
+        autoIncrement: true
     },
     name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
     },
     description: {
         type: DataTypes.TEXT,
-        allowNull: true,
-    },
-    phone: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
+        allowNull: true
     },
     email: {
         type: DataTypes.STRING,
-        allowNull: false,
         unique: true,
-        validate: {
-            isEmail: true,
-        },
+        allowNull: false
     },
-    category: {
+    phone: {
         type: DataTypes.STRING,
-        allowNull: false,
-    },
-    status: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: 'pending', // القيم المتوقعة: "pending", "approved", "rejected"
+        unique: true,
+        allowNull: false
     },
     password: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: false
+    },
+    category: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    status: {
+        type: DataTypes.ENUM('pending', 'approved', 'rejected'),
+        defaultValue: 'pending'
+    },
+    logo: {
+        type: DataTypes.STRING,
+        allowNull: true
     },
     location: {
         type: DataTypes.GEOMETRY('POINT'),
@@ -58,17 +56,19 @@ const Store = sequelize.define('Store', {
         type: DataTypes.JSON,
         allowNull: true
     },
-    logo: {
+    attachments: {
+        type: DataTypes.JSON,
+        allowNull: true,
+        defaultValue: []
+    },
+    rejectionReason: {
         type: DataTypes.STRING,
         allowNull: true
-    },
+    }
 }, {
     timestamps: true,
     tableName: 'Stores',
+    underscored: true
 });
-
-// تعريف العلاقة بين المتجر والنقاط
-Store.hasMany(Point, { foreignKey: 'storeId' });
-Point.belongsTo(Store, { foreignKey: 'storeId' });
 
 module.exports = Store;

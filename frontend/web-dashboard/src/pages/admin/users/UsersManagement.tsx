@@ -1,10 +1,6 @@
+import { useState, useEffect } from 'react';
 import {
   Box,
-  Heading,
-  Card,
-  CardHeader,
-  CardBody,
-  Stack,
   Table,
   Thead,
   Tbody,
@@ -13,176 +9,153 @@ import {
   Td,
   Badge,
   Button,
-  InputGroup,
-  InputLeftElement,
-  Input,
-  Select,
-  IconButton,
-  Flex,
-  Menu,
-  MenuButton,
-  MenuList,
-  MenuItem,
-  Avatar,
-  Text,
   HStack,
+  useToast,
+  Spinner,
+  Flex,
+  InputGroup,
+  Input,
+  InputLeftElement,
 } from '@chakra-ui/react';
-import { FiSearch, FiFilter, FiMoreVertical, FiMail, FiPhone } from 'react-icons/fi';
-import UserDetailsModal from '../../../shared/components/modals/users/UserDetailsModal';
-import AddUserModal from '../../../shared/components/modals/users/AddUserModal';
-import { useState } from 'react';
+import { FiSearch, FiEdit2, FiLock } from 'react-icons/fi';
+import api from '../../../services/api';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  uniqueCode: string;
+  status: 'active' | 'blocked';
+  createdAt: string;
+}
 
 const UsersManagement = () => {
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState<number>();
+  const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
+  const toast = useToast();
 
-  const users = [
-    {
-      id: 1,
-      name: 'أحمد محمد',
-      email: 'ahmed@example.com',
-      phone: '0501234567',
-      joinDate: '2024-01-10',
-      status: 'active',
-      points: 450,
-      ordersCount: 23
-    },
-    {
-      id: 2,
-      name: 'سارة خالد',
-      email: 'sara@example.com',
-      phone: '0559876543',
-      joinDate: '2024-01-15',
-      status: 'inactive',
-      points: 120,
-      ordersCount: 8
-    },
-    // يمكن إضافة المزيد من البيانات التجريبية
-  ];
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-  const handleViewDetails = (userId: number) => {
-    setSelectedUserId(userId);
-    setIsDetailsModalOpen(true);
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/api/admin/users');
+      setUsers(response.data.users);
+    } catch (error) {
+      toast({
+        title: "خطأ في جلب بيانات المستخدمين",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  return (
-    <Stack spacing={6}>
-      <Flex justify="space-between" align="center">
-        <Heading size="lg">إدارة المستخدمين</Heading>
-        <HStack spacing={4}>
-          <Button 
-            colorScheme="blue"
-            onClick={() => setIsAddUserModalOpen(true)}
-          >
-            إضافة مستخدم
-          </Button>
-          <Button variant="outline">تصدير البيانات</Button>
-        </HStack>
+  const handleBlockUser = async (userId: number) => {
+    try {
+      await api.put(`/api/admin/users/${userId}/block`);
+      toast({
+        title: "تم حظر المستخدم بنجاح",
+        status: "success",
+        duration: 3000,
+      });
+      fetchUsers();
+    } catch (error) {
+      toast({
+        title: "حدث خطأ أثناء حظر المستخدم",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
+
+  const filteredUsers = users.filter(user => 
+    user.name.includes(searchQuery) || 
+    user.email.includes(searchQuery) ||
+    user.phone.includes(searchQuery) ||
+    user.uniqueCode.includes(searchQuery)
+  );
+
+  if (isLoading) {
+    return (
+      <Flex justify="center" align="center" minH="400px">
+        <Spinner size="xl" />
       </Flex>
+    );
+  }
 
-      <Card>
-        <CardHeader>
-          <Stack spacing={4}>
-            <Flex gap={4}>
-              <InputGroup w="300px">
-                <InputLeftElement pointerEvents="none">
-                  <FiSearch />
-                </InputLeftElement>
-                <Input placeholder="البحث عن مستخدم..." />
-              </InputGroup>
-              <Select placeholder="الحالة" w="200px">
-                <option value="active">نشط</option>
-                <option value="inactive">غير نشط</option>
-                <option value="blocked">محظور</option>
-              </Select>
-              <IconButton
-                aria-label="فلترة متقدمة"
-                icon={<FiFilter />}
-                variant="outline"
-              />
-            </Flex>
-          </Stack>
-        </CardHeader>
-        <CardBody>
-          <Table>
-            <Thead>
-              <Tr>
-                <Th>المستخدم</Th>
-                <Th>معلومات الاتصال</Th>
-                <Th>تاريخ الانضمام</Th>
-                <Th>الحالة</Th>
-                <Th>النقاط</Th>
-                <Th>عدد الطلبات</Th>
-                <Th>الإجراءات</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {users.map(user => (
-                <Tr key={user.id}>
-                  <Td>
-                    <HStack>
-                      <Avatar size="sm" name={user.name} />
-                      <Text fontWeight="medium">{user.name}</Text>
-                    </HStack>
-                  </Td>
-                  <Td>
-                    <Stack spacing={1} fontSize="sm">
-                      <HStack>
-                        <FiMail />
-                        <Text>{user.email}</Text>
-                      </HStack>
-                      <HStack>
-                        <FiPhone />
-                        <Text>{user.phone}</Text>
-                      </HStack>
-                    </Stack>
-                  </Td>
-                  <Td>{user.joinDate}</Td>
-                  <Td>
-                    <Badge
-                      colorScheme={user.status === 'active' ? 'green' : 'red'}
-                    >
-                      {user.status === 'active' ? 'نشط' : 'غير نشط'}
-                    </Badge>
-                  </Td>
-                  <Td isNumeric>{user.points}</Td>
-                  <Td isNumeric>{user.ordersCount}</Td>
-                  <Td>
-                    <Menu>
-                      <MenuButton
-                        as={IconButton}
-                        icon={<FiMoreVertical />}
-                        variant="ghost"
-                        size="sm"
-                      />
-                      <MenuList>
-                        <MenuItem onClick={() => handleViewDetails(user.id)}>عرض التفاصيل</MenuItem>
-                        <MenuItem>تعديل البيانات</MenuItem>
-                        <MenuItem>سجل النقاط</MenuItem>
-                        <MenuItem>سجل الطلبات</MenuItem>
-                        <MenuItem color="red.500">حظر المستخدم</MenuItem>
-                      </MenuList>
-                    </Menu>
-                  </Td>
-                </Tr>
-              ))}
-            </Tbody>
-          </Table>
-        </CardBody>
-      </Card>
+  return (
+    <Box p={4}>
+      <HStack mb={6}>
+        <InputGroup maxW="300px">
+          <InputLeftElement pointerEvents="none">
+            <FiSearch color="gray.300" />
+          </InputLeftElement>
+          <Input
+            placeholder="بحث..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </InputGroup>
+      </HStack>
 
-      <AddUserModal 
-        isOpen={isAddUserModalOpen}
-        onClose={() => setIsAddUserModalOpen(false)}
-      />
-
-      <UserDetailsModal
-        isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
-        userId={selectedUserId}
-      />
-    </Stack>
+      <Table variant="simple">
+        <Thead>
+          <Tr>
+            <Th>الاسم</Th>
+            <Th>البريد الإلكتروني</Th>
+            <Th>رقم الجوال</Th>
+            <Th>الرمز التعريفي</Th>
+            <Th>الحالة</Th>
+            <Th>تاريخ التسجيل</Th>
+            <Th>الإجراءات</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {filteredUsers.map((user) => (
+            <Tr key={user.id}>
+              <Td>{user.name}</Td>
+              <Td>{user.email}</Td>
+              <Td>{user.phone}</Td>
+              <Td>{user.uniqueCode}</Td>
+              <Td>
+                <Badge
+                  colorScheme={user.status === 'active' ? 'green' : 'red'}
+                >
+                  {user.status === 'active' ? 'نشط' : 'محظور'}
+                </Badge>
+              </Td>
+              <Td>{new Date(user.createdAt).toLocaleDateString('ar-SA')}</Td>
+              <Td>
+                <HStack spacing={2}>
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    leftIcon={<FiEdit2 />}
+                    onClick={() => window.location.href = `/admin/users/${user.id}`}
+                  >
+                    تعديل
+                  </Button>
+                  <Button
+                    size="sm"
+                    colorScheme={user.status === 'active' ? 'red' : 'green'}
+                    leftIcon={<FiLock />}
+                    onClick={() => handleBlockUser(user.id)}
+                  >
+                    {user.status === 'active' ? 'حظر' : 'إلغاء الحظر'}
+                  </Button>
+                </HStack>
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+    </Box>
   );
 };
 

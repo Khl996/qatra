@@ -2,13 +2,25 @@
 // المسار: backend/controllers/userController.js
 
 const User = require('../models/User');
+const Store = require('../models/Store');
+const Point = require('../models/Point'); // إضافة استيراد Point
+const Purchase = require('../models/Purchase');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const { generateUniqueCode, formatPhoneNumber } = require('../utils/helpers');
+const AppError = require('../utils/errors');
+const { sendResponse } = require('../utils/responses');
+const logger = require('../config/logger');
 
 const userController = {
-    register: async (req, res) => {
+    register: async (req, res, next) => {
         try {
+            // Validate request
+            const errors = validationResult(req);
+            if (!errors.isEmpty()) {
+                throw new AppError('Validation error', 400);
+            }
+
             const { name, email, phone, password } = req.body;
             const hashedPassword = await bcrypt.hash(password, 10);
             const uniqueCode = await generateUniqueCode();
@@ -27,9 +39,11 @@ const userController = {
                 { expiresIn: '1h' }
             );
 
-            res.status(201).json({ user, token });
+            logger.info(`New user registered: ${user.email}`);
+            return sendResponse(res, 201, { user, token }, 'User registered successfully');
         } catch (error) {
-            res.status(500).json({ message: error.message });
+            logger.error(`Registration error: ${error.message}`);
+            next(error);
         }
     },
 

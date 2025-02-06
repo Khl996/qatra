@@ -2,59 +2,45 @@
 // المسار: backend/models/User.js
 
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/database');
+const sequelize = require('../config/database');
 const Point = require('./Point');
 
 const User = sequelize.define('User', {
-    id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        allowNull: false,
-        primaryKey: true,
-    },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    email: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-        validate: {
-            isEmail: true,
-        },
-    },
-    phone: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        unique: true,
-    },
-    password: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    uniqueCode: {
-        type: DataTypes.STRING(8),
-        allowNull: false,
-        unique: true,
-    },
-    role: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: 'user', // roles: "user", "admin", "sub-admin"
-    },
-    permissions: {
-        type: DataTypes.JSON, // For storing permissions for sub-admins
-        allowNull: true,
-    },
-    status: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        defaultValue: 'active', // "active", "inactive"
-    },
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  email: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false
+  },
+  phone: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false
+  },
+  uniqueCode: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    unique: true
+  },
+  status: {
+    type: DataTypes.ENUM('active', 'blocked'),
+    defaultValue: 'active'
+  }
 }, {
-    timestamps: true,
-    tableName: 'Users',
+  timestamps: true,
+  tableName: 'Users'
 });
 
 // تعريف العلاقة بين المستخدم والنقاط

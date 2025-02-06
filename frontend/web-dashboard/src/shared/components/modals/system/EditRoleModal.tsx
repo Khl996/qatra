@@ -1,36 +1,13 @@
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalFooter,
-  ModalBody,
-  ModalCloseButton,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  VStack,
-  Checkbox,
-  CheckboxGroup,
-  Grid,
-  useToast,
-  Divider,
-  Text,
-  Alert,
-  AlertIcon,
-  Stack,
-} from '@chakra-ui/react';
-import { useState } from 'react';
+import { Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, ModalCloseButton, Button, FormControl, FormLabel, Input, VStack, Checkbox, CheckboxGroup, Grid, useToast, Divider, Text, Alert, AlertIcon, Stack } from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
 
 interface EditRoleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  roleId?: number;
-  roleName?: string;
+  roleId?: string;
 }
 
-const EditRoleModal = ({ isOpen, onClose, roleId, roleName }: EditRoleModalProps) => {
+const EditRoleModal = ({ isOpen, onClose, roleId }: EditRoleModalProps) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -58,6 +35,12 @@ const EditRoleModal = ({ isOpen, onClose, roleId, roleName }: EditRoleModalProps
       { id: 'view_logs', label: 'عرض سجلات النظام', defaultChecked: true }
     ]
   };
+
+  useEffect(() => {
+    if (roleId) {
+      // جلب بيانات الدور
+    }
+  }, [roleId]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -90,7 +73,7 @@ const EditRoleModal = ({ isOpen, onClose, roleId, roleName }: EditRoleModalProps
         <ModalBody>
           <VStack spacing={6} align="stretch">
             <Text>
-              تعديل الدور: <strong>{roleName}</strong>
+              تعديل الدور: <strong>{roleId}</strong>
             </Text>
 
             <Alert status="info" borderRadius="md">
@@ -100,7 +83,7 @@ const EditRoleModal = ({ isOpen, onClose, roleId, roleName }: EditRoleModalProps
 
             <FormControl isRequired>
               <FormLabel>اسم الدور</FormLabel>
-              <Input defaultValue={roleName} placeholder="أدخل اسم الدور" />
+              <Input defaultValue={roleId} placeholder="أدخل اسم الدور" />
             </FormControl>
 
             <Divider />
@@ -172,15 +155,11 @@ const EditRoleModal = ({ isOpen, onClose, roleId, roleName }: EditRoleModalProps
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" ml={3} onClick={onClose}>
-            إلغاء
-          </Button>
-          <Button
-            colorScheme="blue"
-            isLoading={isLoading}
-            onClick={handleSubmit}
-          >
+          <Button colorScheme="blue" ml={3} isLoading={isLoading} onClick={handleSubmit}>
             حفظ التغييرات
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            إلغاء
           </Button>
         </ModalFooter>
       </ModalContent>

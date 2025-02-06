@@ -1,73 +1,70 @@
-import {
-  VStack,
-  FormControl,
-  FormLabel,
-  Input,
-  Button,
-  FormErrorMessage
-} from '@chakra-ui/react';
+import { Button, FormControl, FormLabel, Input, VStack } from '@chakra-ui/react';
 import { useState } from 'react';
 
-interface LoginFormProps {
-  onSubmit: (credentials: { email: string; password: string }) => Promise<void>;
-  isLoading?: boolean;
+interface LoginFormData {
+  email: string;
+  password: string;
 }
 
-const LoginForm = ({ onSubmit, isLoading = false }: LoginFormProps) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+interface LoginFormProps {
+  onSubmit: (data: LoginFormData) => void;
+  isLoading?: boolean;
+  error?: string;
+  type?: 'admin' | 'merchant';
+}
 
-  const handleSubmit = async (e: React.FormEvent) => {
+const LoginForm = ({ onSubmit, isLoading, error, type = 'admin' }: LoginFormProps) => {
+  const [formData, setFormData] = useState<LoginFormData>({
+    email: '',
+    password: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrors({});
-
-    // التحقق من البيانات
-    if (!email) {
-      setErrors(prev => ({ ...prev, email: 'البريد الإلكتروني مطلوب' }));
-      return;
+    // تحقق من وجود البيانات قبل الإرسال
+    if (formData.email && formData.password) {
+      onSubmit(formData);
     }
-    if (!password) {
-      setErrors(prev => ({ ...prev, password: 'كلمة المرور مطلوبة' }));
-      return;
-    }
+  };
 
-    await onSubmit({ email, password });
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   return (
-    <VStack as="form" spacing={4} onSubmit={handleSubmit}>
-      <FormControl isInvalid={!!errors.email}>
-        <FormLabel>البريد الإلكتروني</FormLabel>
-        <Input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="أدخل البريد الإلكتروني"
-        />
-        {errors.email && <FormErrorMessage>{errors.email}</FormErrorMessage>}
-      </FormControl>
-
-      <FormControl isInvalid={!!errors.password}>
-        <FormLabel>كلمة المرور</FormLabel>
-        <Input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="أدخل كلمة المرور"
-        />
-        {errors.password && <FormErrorMessage>{errors.password}</FormErrorMessage>}
-      </FormControl>
-
-      <Button
-        type="submit"
-        colorScheme="blue"
-        width="full"
-        isLoading={isLoading}
-      >
-        تسجيل الدخول
-      </Button>
-    </VStack>
+    <form onSubmit={handleSubmit}>
+      <VStack spacing={4}>
+        <FormControl isRequired>
+          <FormLabel>{type === 'admin' ? 'البريد الإلكتروني' : 'البريد الإلكتروني أو رقم الهاتف'}</FormLabel>
+          <Input
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder={type === 'admin' ? 'أدخل البريد الإلكتروني' : 'أدخل البريد الإلكتروني أو رقم الهاتف'}
+          />
+        </FormControl>
+        <FormControl isRequired>
+          <FormLabel>كلمة المرور</FormLabel>
+          <Input
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="أدخل كلمة المرور"
+          />
+        </FormControl>
+        <Button
+          type="submit"
+          colorScheme="blue"
+          width="full"
+          isLoading={isLoading}
+        >
+          تسجيل الدخول
+        </Button>
+      </VStack>
+    </form>
   );
 };
 

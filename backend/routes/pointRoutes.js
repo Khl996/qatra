@@ -4,9 +4,13 @@
 const express = require('express');
 const router = express.Router();
 const pointController = require('../controllers/pointController');
-const { authMiddleware } = require('../middleware/authMiddleware');
+const { authMiddleware, storeAuthMiddleware } = require('../middleware/authMiddleware');
 
+// المسارات المحمية للمستخدمين
 router.get('/', authMiddleware, pointController.getUserPoints);
-router.post('/add', authMiddleware, pointController.addPoints);
+router.get('/history', authMiddleware, pointController.getPointsHistory);
+
+// المسارات المحمية للمتاجر
+router.post('/add', storeAuthMiddleware, pointController.addPoints);
 
 module.exports = router;

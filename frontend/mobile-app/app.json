@@ -6,25 +6,59 @@
     "orientation": "portrait",
     "icon": "./assets/images/default-icon.png",
     "userInterfaceStyle": "light",
+    "plugins": [
+      "expo-secure-store",
+      "expo-image-picker",
+      "expo-location"
+    ],
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/your-project-id"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "splash": {
       "image": "./assets/images/default-splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourcompany.qatra",
+      "buildNumber": "1.0.0",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "نحتاج إلى موقعك لإظهار المتاجر القريبة منك",
+        "NSCameraUsageDescription": "نحتاج إلى الكاميرا لالتقاط الصور",
+        "NSPhotoLibraryUsageDescription": "نحتاج إلى مكتبة الصور لاختيار الصور"
+      }
     },
     "android": {
+      "package": "com.yourcompany.qatra",
+      "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/default-adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "experiments": {
       "newArchEnabled": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-project-id"
+      },
+      "apiUrl": "http://172.20.10.4:5000/api" 
     }
   }
 }

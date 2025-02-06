@@ -28,31 +28,14 @@ interface AddRoleModalProps {
 const AddRoleModal = ({ isOpen, onClose }: AddRoleModalProps) => {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
-
-  // تعريف الصلاحيات المتاحة
-  const permissions = {
-    users: [
-      { id: 'view_users', label: 'عرض المستخدمين' },
-      { id: 'edit_users', label: 'تعديل المستخدمين' },
-      { id: 'delete_users', label: 'حذف المستخدمين' }
-    ],
-    stores: [
-      { id: 'view_stores', label: 'عرض المتاجر' },
-      { id: 'approve_stores', label: 'الموافقة على المتاجر' },
-      { id: 'edit_stores', label: 'تعديل المتاجر' },
-      { id: 'manage_commissions', label: 'إدارة العمولات' }
-    ],
-    finance: [
-      { id: 'view_reports', label: 'عرض التقارير المالية' },
-      { id: 'manage_transactions', label: 'إدارة المعاملات' },
-      { id: 'export_reports', label: 'تصدير التقارير' }
-    ],
-    system: [
-      { id: 'manage_settings', label: 'إدارة إعدادات النظام' },
-      { id: 'manage_roles', label: 'إدارة الصلاحيات' },
-      { id: 'view_logs', label: 'عرض سجلات النظام' }
-    ]
-  };
+  const [permissions] = useState([
+    { id: 'users_view', label: 'عرض المستخدمين' },
+    { id: 'users_manage', label: 'إدارة المستخدمين' },
+    { id: 'stores_view', label: 'عرض المتاجر' },
+    { id: 'stores_manage', label: 'إدارة المتاجر' },
+    { id: 'reports_view', label: 'عرض التقارير' },
+    { id: 'system_manage', label: 'إدارة النظام' },
+  ]);
 
   const handleSubmit = async () => {
     setIsLoading(true);
@@ -83,91 +66,35 @@ const AddRoleModal = ({ isOpen, onClose }: AddRoleModalProps) => {
         <ModalHeader>إضافة دور جديد</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={6} align="stretch">
-            <FormControl isRequired>
+          <VStack spacing={4}>
+            <FormControl>
               <FormLabel>اسم الدور</FormLabel>
-              <Input placeholder="أدخل اسم الدور" />
+              <Input placeholder="مثال: مدير المتاجر" />
             </FormControl>
-
             <FormControl>
               <FormLabel>وصف الدور</FormLabel>
-              <Input placeholder="أدخل وصفاً مختصراً للدور" />
+              <Input placeholder="وصف مختصر للدور" />
             </FormControl>
-
-            <Divider />
-
-            <Text fontWeight="bold">الصلاحيات</Text>
-
-            <Grid templateColumns="repeat(1, 1fr)" gap={6}>
-              {/* إدارة المستخدمين */}
-              <FormControl>
-                <FormLabel>إدارة المستخدمين</FormLabel>
-                <CheckboxGroup>
-                  <VStack align="start">
-                    {permissions.users.map(perm => (
-                      <Checkbox key={perm.id} value={perm.id}>
-                        {perm.label}
-                      </Checkbox>
-                    ))}
-                  </VStack>
-                </CheckboxGroup>
-              </FormControl>
-
-              {/* إدارة المتاجر */}
-              <FormControl>
-                <FormLabel>إدارة المتاجر</FormLabel>
-                <CheckboxGroup>
-                  <VStack align="start">
-                    {permissions.stores.map(perm => (
-                      <Checkbox key={perm.id} value={perm.id}>
-                        {perm.label}
-                      </Checkbox>
-                    ))}
-                  </VStack>
-                </CheckboxGroup>
-              </FormControl>
-
-              {/* الإدارة المالية */}
-              <FormControl>
-                <FormLabel>الإدارة المالية</FormLabel>
-                <CheckboxGroup>
-                  <VStack align="start">
-                    {permissions.finance.map(perm => (
-                      <Checkbox key={perm.id} value={perm.id}>
-                        {perm.label}
-                      </Checkbox>
-                    ))}
-                  </VStack>
-                </CheckboxGroup>
-              </FormControl>
-
-              {/* إدارة النظام */}
-              <FormControl>
-                <FormLabel>إدارة النظام</FormLabel>
-                <CheckboxGroup>
-                  <VStack align="start">
-                    {permissions.system.map(perm => (
-                      <Checkbox key={perm.id} value={perm.id}>
-                        {perm.label}
-                      </Checkbox>
-                    ))}
-                  </VStack>
-                </CheckboxGroup>
-              </FormControl>
-            </Grid>
+            <FormControl>
+              <FormLabel>الصلاحيات</FormLabel>
+              <CheckboxGroup>
+                <VStack align="start" spacing={2}>
+                  {permissions.map(permission => (
+                    <Checkbox key={permission.id} value={permission.id}>
+                      {permission.label}
+                    </Checkbox>
+                  ))}
+                </VStack>
+              </CheckboxGroup>
+            </FormControl>
           </VStack>
         </ModalBody>
-
         <ModalFooter>
-          <Button variant="ghost" ml={3} onClick={onClose}>
-            إلغاء
+          <Button colorScheme="blue" ml={3} isLoading={isLoading} onClick={handleSubmit}>
+            حفظ
           </Button>
-          <Button
-            colorScheme="blue"
-            isLoading={isLoading}
-            onClick={handleSubmit}
-          >
-            إضافة الدور
+          <Button variant="ghost" onClick={onClose}>
+            إلغاء
           </Button>
         </ModalFooter>
       </ModalContent>

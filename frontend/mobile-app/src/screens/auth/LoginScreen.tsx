@@ -7,31 +7,45 @@ import {
   TouchableOpacity,
   Image,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Alert
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AuthButton } from '../../components/common/AuthButton';
 import { useAuth } from '../../context/AuthContext';
 import { validatePhone } from '../../services/authService';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { AuthStackParamList } from '../../navigation/types';
+import { api } from '../../config/api.config';
+
+type LoginScreenNavigationProp = NativeStackNavigationProp<AuthStackParamList, 'Login'>;
 
 export default function LoginScreen() {
-  const [phone, setPhone] = useState('');
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const { login, isLoading } = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<LoginScreenNavigationProp>();
 
   const handleLogin = async () => {
-    const phoneError = validatePhone(phone);
-    if (phoneError) {
-      setError(phoneError);
-      return;
-    }
-
     try {
-      await login(phone);
-    } catch (err) {
-      setError('حدث خطأ أثناء تسجيل الدخول');
+      if (!identifier || !password) {
+        Alert.alert('تنبيه', 'الرجاء إدخال جميع البيانات المطلوبة');
+        return;
+      }
+
+      // تنسيق رقم الجوال
+      const formattedPhone = identifier.startsWith('0') ? identifier : `0${identifier}`;
+      
+      await login({ 
+        identifier: formattedPhone, 
+        password 
+      });
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || 'فشل تسجيل الدخول';
+      Alert.alert('خطأ', errorMessage);
+      console.error('Login error details:', error?.response?.data);
     }
   };
 
@@ -57,9 +71,17 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="رقم الجوال"
-            value={phone}
-            onChangeText={setPhone}
+            value={identifier}
+            onChangeText={setIdentifier}
             keyboardType="phone-pad"
+            textAlign="right"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="كلمة المرور"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
             textAlign="right"
           />
 
@@ -67,10 +89,13 @@ export default function LoginScreen() {
             title="تسجيل الدخول"
             onPress={handleLogin}
             loading={isLoading}
-            disabled={!phone}
+            disabled={!identifier || !password}
           />
 
-          <TouchableOpacity style={styles.registerLink}>
+          <TouchableOpacity 
+            style={styles.registerLink} 
+            onPress={() => navigation.navigate('Register')}
+          >
             <Text style={styles.registerText}>
               ليس لديك حساب؟{' '}
               <Text style={styles.registerLinkText}>

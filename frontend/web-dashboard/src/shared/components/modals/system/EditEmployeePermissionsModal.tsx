@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import {
   Modal,
   ModalOverlay,
@@ -7,77 +8,73 @@ import {
   ModalBody,
   ModalCloseButton,
   Button,
-  FormControl,
-  FormLabel,
   VStack,
-  Select,
-  useToast,
-  Text,
-  Divider,
-  Alert,
-  AlertIcon,
-  Stack,
   Checkbox,
   CheckboxGroup,
+  FormControl,
+  FormLabel,
+  Select,
+  Text,
+  Alert,
+  AlertIcon,
+  Divider,
+  Stack,
+  useToast
 } from '@chakra-ui/react';
-import { useState } from 'react';
+import api from '../../../../services/api';
 
 interface EditEmployeePermissionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  employeeId?: number;
-  employeeName?: string;
+  employeeId?: string;
+  employeeName?: string;  // إضافة اسم الموظف كخاصية اختيارية
 }
 
-const EditEmployeePermissionsModal = ({ 
-  isOpen, 
-  onClose, 
-  employeeId, 
-  employeeName 
-}: EditEmployeePermissionsModalProps) => {
-  const toast = useToast();
+const EditEmployeePermissionsModal = ({ isOpen, onClose, employeeId, employeeName = 'غير محدد' }: EditEmployeePermissionsModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('');
+  const [role, setRole] = useState('');
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [error, setError] = useState('');
+  const toast = useToast();
 
-  const roles = [
-    { id: 'admin', name: 'مدير نظام' },
-    { id: 'store_manager', name: 'مشرف متاجر' },
-    { id: 'accountant', name: 'محاسب' },
-    { id: 'support', name: 'دعم فني' },
-  ];
+  useEffect(() => {
+    if (employeeId && isOpen) {
+      fetchEmployeeData();
+    }
+  }, [employeeId, isOpen]);
 
-  const permissions = {
-    users: [
-      { id: 'view_users', label: 'عرض المستخدمين' },
-      { id: 'edit_users', label: 'تعديل المستخدمين' },
-    ],
-    stores: [
-      { id: 'view_stores', label: 'عرض المتاجر' },
-      { id: 'edit_stores', label: 'تعديل المتاجر' },
-    ],
-    finance: [
-      { id: 'view_reports', label: 'عرض التقارير' },
-      { id: 'manage_transactions', label: 'إدارة المعاملات' },
-    ],
+  const fetchEmployeeData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/api/admin/employees/${employeeId}`);
+      setRole(response.data.role);
+      setSelectedPermissions(response.data.permissions || []);
+    } catch (error) {
+      toast({
+        title: "خطأ في جلب البيانات",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
-    setIsLoading(true);
     try {
-      // سيتم إضافة منطق حفظ البيانات هنا
+      setIsLoading(true);
+      await api.put(`/api/admin/employees/${employeeId}/permissions`, {
+        role,
+        permissions: selectedPermissions
+      });
       toast({
-        title: 'تم تحديث الصلاحيات بنجاح',
-        status: 'success',
+        title: "تم تحديث الصلاحيات بنجاح",
+        status: "success",
         duration: 3000,
       });
       onClose();
     } catch (error) {
-      toast({
-        title: 'حدث خطأ',
-        description: 'لم نتمكن من تحديث الصلاحيات',
-        status: 'error',
-        duration: 3000,
-      });
+      setError('حدث خطأ أثناء تحديث الصلاحيات');
     } finally {
       setIsLoading(false);
     }
@@ -90,64 +87,75 @@ const EditEmployeePermissionsModal = ({
         <ModalHeader>تعديل صلاحيات الموظف</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
-          <VStack spacing={6} align="stretch">
-            <Text>
-              تعديل صلاحيات الموظف: <strong>{employeeName}</strong>
-            </Text>
-
-            <Alert status="info" borderRadius="md">
+          {error && (
+            <Alert status="error" mb={4}>
               <AlertIcon />
-              سيتم تطبيق الصلاحيات الجديدة فور حفظ التغييرات
+              {error}
             </Alert>
+          )}
 
-            <FormControl>
-              <FormLabel>الدور الوظيفي</FormLabel>
-              <Select 
-                value={selectedRole} 
-                onChange={(e) => setSelectedRole(e.target.value)}
-                placeholder="اختر الدور الوظيفي"
-              >
-                {roles.map(role => (
-                  <option key={role.id} value={role.id}>
-                    {role.name}
-                  </option>
-                ))}
-              </Select>
+          <FormControl mb={4}>
+            <FormLabel>الدور الوظيفي</FormLabel>
+            <Select
+              value={role}
+              onChange={(e) => setRole(e.target.value)}
+              placeholder="اختر الدور"
+            >
+              <option value="admin">مدير النظام</option>
+              <option value="supervisor">مشرف</option>
+              <option value="support">دعم فني</option>
+            </Select>
+          </FormControl>
+
+          <Divider my={4} />
+
+          <Text fontSize="lg" fontWeight="bold" mb={4}>
+            الصلاحيات
+          </Text>
+
+          <Stack spacing={6}>
+            {/* إدارة المستخدمين */}
+            <FormControl as="fieldset">
+              <FormLabel as="legend">المستخدمين</FormLabel>
+              <VStack align="start">
+                <CheckboxGroup value={selectedPermissions} onChange={(values) => setSelectedPermissions(values as string[])}>
+                  <Checkbox value="users_view">عرض المستخدمين</Checkbox>
+                  <Checkbox value="users_manage">إدارة المستخدمين</Checkbox>
+                </CheckboxGroup>
+              </VStack>
             </FormControl>
 
-            <Divider />
+            {/* إدارة المتاجر */}
+            <FormControl as="fieldset">
+              <FormLabel as="legend">المتاجر</FormLabel>
+              <VStack align="start">
+                <CheckboxGroup value={selectedPermissions} onChange={(values) => setSelectedPermissions(values as string[])}>
+                  <Checkbox value="stores_view">عرض المتاجر</Checkbox>
+                  <Checkbox value="stores_manage">إدارة المتاجر</Checkbox>
+                  <Checkbox value="stores_approve">الموافقة على المتاجر</Checkbox>
+                </CheckboxGroup>
+              </VStack>
+            </FormControl>
 
-            <Text fontWeight="bold">الصلاحيات المخصصة</Text>
-
-            <Stack spacing={6}>
-              {Object.entries(permissions).map(([category, perms]) => (
-                <FormControl key={category}>
-                  <FormLabel>{category === 'users' ? 'المستخدمين' : category === 'stores' ? 'المتاجر' : 'المالية'}</FormLabel>
-                  <CheckboxGroup>
-                    <Stack spacing={2}>
-                      {perms.map(perm => (
-                        <Checkbox key={perm.id} value={perm.id}>
-                          {perm.label}
-                        </Checkbox>
-                      ))}
-                    </Stack>
-                  </CheckboxGroup>
-                </FormControl>
-              ))}
-            </Stack>
-          </VStack>
+            {/* التقارير والإحصائيات */}
+            <FormControl as="fieldset">
+              <FormLabel as="legend">التقارير</FormLabel>
+              <VStack align="start">
+                <CheckboxGroup value={selectedPermissions} onChange={(values) => setSelectedPermissions(values as string[])}>
+                  <Checkbox value="reports_view">عرض التقارير</Checkbox>
+                  <Checkbox value="reports_export">تصدير التقارير</Checkbox>
+                </CheckboxGroup>
+              </VStack>
+            </FormControl>
+          </Stack>
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" ml={3} onClick={onClose}>
-            إلغاء
-          </Button>
-          <Button
-            colorScheme="blue"
-            isLoading={isLoading}
-            onClick={handleSubmit}
-          >
+          <Button colorScheme="blue" ml={3} onClick={handleSubmit} isLoading={isLoading}>
             حفظ التغييرات
+          </Button>
+          <Button variant="ghost" onClick={onClose}>
+            إلغاء
           </Button>
         </ModalFooter>
       </ModalContent>

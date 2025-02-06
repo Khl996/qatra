@@ -1,125 +1,205 @@
-import { Stack, HStack, Heading, Button, Card, CardHeader, CardBody, Tabs, TabList, Tab, Badge, SimpleGrid, Text } from '@chakra-ui/react';
-import { useState } from 'react';
-import { StoreStatsGrid } from './components/StoreStatsGrid';
-import { StoreFilters } from './components/StoreFilters';
-import { StoreCard } from './components/StoreCard';
-import Pagination from '../../../shared/components/Pagination';
-import { StoreDetailsModal } from '../../../shared/components/modals/stores/StoreDetailsModal';
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Badge,
+  Button,
+  HStack,
+  useToast,
+  Spinner,
+  Flex,
+  Select,
+  Input,
+  InputGroup,
+  InputLeftElement,
+} from '@chakra-ui/react';
+import { FiSearch, FiCheck, FiX } from 'react-icons/fi';
+import api from '../../../services/api';
+
+interface Store {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  category: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+}
 
 const StoresManagement = () => {
-  // بيانات تجريبية للمتاجر
-  const stores = [
-    {
-      id: 1,
-      name: "كافيه السعادة",
-      type: "مقهى",
-      owner: "أحمد محمد",
-      email: "cafe@example.com",
-      phone: "0501234567",
-      location: "الرياض - حي النرجس",
-      status: "active",
-      joinDate: "2024-01-15",
-      ordersCount: 156,
-      rating: 4.8,
-      revenue: 15600,
-    },
-    // ...يمكن إضافة المزيد من البيانات التجريبية
-  ];
+  const [stores, setStores] = useState<Store[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const toast = useToast();
 
-  // إضافة ترقيم الصفحات
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    itemsPerPage: 9,
-    totalItems: stores.length // تعيين القيمة الابتدائية من طول المصفوفة
-  });
+  useEffect(() => {
+    fetchStores();
+  }, [filter]);
 
-  // إضافة فلترة متقدمة
-  const [filters, setFilters] = useState({
-    search: '',
-    type: '',
-    status: '',
-    dateRange: { start: null, end: null }
-  });
-
-  const [selectedStore, setSelectedStore] = useState<any>(null);
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-
-  const handleStoreAction = (action: string, store: any) => {
-    switch (action) {
-      case 'view':
-        setSelectedStore(store);
-        setIsDetailsModalOpen(true);
-        break;
-      case 'edit':
-        // TODO: Implement edit functionality
-        break;
-      case 'suspend':
-        // TODO: Implement suspend functionality
-        break;
-      default:
-        break;
+  const fetchStores = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(`/api/admin/stores?status=${filter}`);
+      setStores(response.data.stores);
+    } catch (error) {
+      toast({
+        title: "خطأ في جلب بيانات المتاجر",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  const handleApprove = async (storeId: number) => {
+    try {
+      await api.put(`/api/admin/stores/${storeId}/approve`);
+      toast({
+        title: "تم قبول المتجر بنجاح",
+        status: "success",
+        duration: 3000,
+      });
+      fetchStores();
+    } catch (error) {
+      toast({
+        title: "حدث خطأ أثناء قبول المتجر",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
+
+  const handleReject = async (storeId: number) => {
+    try {
+      await api.put(`/api/admin/stores/${storeId}/reject`);
+      toast({
+        title: "تم رفض المتجر",
+        status: "success",
+        duration: 3000,
+      });
+      fetchStores();
+    } catch (error) {
+      toast({
+        title: "حدث خطأ أثناء رفض المتجر",
+        status: "error",
+        duration: 3000,
+      });
+    }
+  };
+
+  const filteredStores = stores.filter(store => 
+    store.name.includes(searchQuery) || 
+    store.email.includes(searchQuery) ||
+    store.phone.includes(searchQuery)
+  );
+
+  if (isLoading) {
+    return (
+      <Flex justify="center" align="center" minH="400px">
+        <Spinner size="xl" />
+      </Flex>
+    );
+  }
+
   return (
-    <Stack spacing={6}>
-      <HStack justify="space-between">
-        <Heading size="lg">إدارة المتاجر</Heading>
-        <Button colorScheme="blue">إضافة متجر جديد</Button>
+    <Box p={4}>
+      <HStack mb={6} spacing={4}>
+        <InputGroup maxW="300px">
+          <InputLeftElement pointerEvents="none">
+            <FiSearch color="gray.300" />
+          </InputLeftElement>
+          <Input
+            placeholder="بحث..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </InputGroup>
+        <Select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          maxW="200px"
+        >
+          <option value="all">جميع المتاجر</option>
+          <option value="pending">قيد الانتظار</option>
+          <option value="approved">مفعل</option>
+          <option value="rejected">مرفوض</option>
+        </Select>
       </HStack>
 
-      <StoreStatsGrid />
-      <StoreFilters onFilterChange={filters => setFilters(filters)} />
-
-      <Card>
-        <CardHeader>
-          <Tabs onChange={(index) => {
-            // Handle tab change
-            const statusFilters = ['all', 'pending', 'active', 'suspended'];
-            setFilters(prev => ({
-              ...prev,
-              status: statusFilters[index]
-            }));
-          }}>
-            <TabList>
-              <Tab>جميع المتاجر</Tab>
-              <Tab>
-                قيد المراجعة
-                <Badge ml={2} colorScheme="yellow">4</Badge>
-              </Tab>
-              <Tab>المتاجر النشطة</Tab>
-              <Tab>المتاجر الموقوفة</Tab>
-            </TabList>
-          </Tabs>
-        </CardHeader>
-        <CardBody>
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={4}>
-            {stores.map((store) => (
-              <StoreCard 
-                key={store.id}
-                store={store}
-                onAction={(action) => handleStoreAction(action, store)}
-              />
-            ))}
-          </SimpleGrid>
-        </CardBody>
-      </Card>
-
-      <StoreDetailsModal 
-        isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
-        store={selectedStore}
-      />
-
-      <HStack justify="space-between" mt={4}>
-        <Text>إجمالي النتائج: {pagination.totalItems}</Text>
-        <Pagination
-          currentPage={pagination.currentPage}
-          totalPages={Math.ceil(pagination.totalItems / pagination.itemsPerPage)}
-          onPageChange={(page: number) => setPagination(prev => ({ ...prev, currentPage: page }))}
-        />
-      </HStack>
-    </Stack>
+      <Table variant="simple">
+        <Thead>
+          <Tr>
+            <Th>اسم المتجر</Th>
+            <Th>البريد الإلكتروني</Th>
+            <Th>رقم الجوال</Th>
+            <Th>التصنيف</Th>
+            <Th>الحالة</Th>
+            <Th>تاريخ التسجيل</Th>
+            <Th>الإجراءات</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {filteredStores.map((store) => (
+            <Tr key={store.id}>
+              <Td>{store.name}</Td>
+              <Td>{store.email}</Td>
+              <Td>{store.phone}</Td>
+              <Td>{store.category}</Td>
+              <Td>
+                <Badge
+                  colorScheme={
+                    store.status === 'approved' ? 'green' : 
+                    store.status === 'pending' ? 'yellow' : 'red'
+                  }
+                >
+                  {store.status === 'approved' ? 'مفعل' : 
+                   store.status === 'pending' ? 'قيد الانتظار' : 'مرفوض'}
+                </Badge>
+              </Td>
+              <Td>{new Date(store.createdAt).toLocaleDateString('ar-SA')}</Td>
+              <Td>
+                <HStack spacing={2}>
+                  {store.status === 'pending' && (
+                    <>
+                      <Button
+                        size="sm"
+                        colorScheme="green"
+                        leftIcon={<FiCheck />}
+                        onClick={() => handleApprove(store.id)}
+                      >
+                        قبول
+                      </Button>
+                      <Button
+                        size="sm"
+                        colorScheme="red"
+                        leftIcon={<FiX />}
+                        onClick={() => handleReject(store.id)}
+                      >
+                        رفض
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    size="sm"
+                    colorScheme="blue"
+                    onClick={() => window.location.href = `/admin/stores/${store.id}`}
+                  >
+                    عرض
+                  </Button>
+                </HStack>
+              </Td>
+            </Tr>
+          ))}
+        </Tbody>
+      </Table>
+    </Box>
   );
 };
 

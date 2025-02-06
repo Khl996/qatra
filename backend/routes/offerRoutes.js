@@ -2,18 +2,18 @@
 // المسار: backend/routes/offerRoutes.js
 
 const express = require('express');
-const { createOffer, getAllOffers, getStoreOffers } = require('../controllers/offerController');
-const { verifyToken, adminOnly } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const offerController = require('../controllers/offerController');
+const { authMiddleware, storeAuthMiddleware } = require('../middleware/authMiddleware');
 
-// مسار إنشاء عرض جديد
-router.post('/', verifyToken, adminOnly, createOffer);
+// مسارات العروض العامة
+router.get('/', offerController.getAllOffers);
+router.get('/:id', offerController.getOfferById);
 
-// مسار عرض جميع العروض
-router.get('/', getAllOffers);
-
-// مسار عرض عروض متجر محدد
-router.get('/store/:storeId', getStoreOffers);
+// مسارات المتاجر المحمية
+router.use(storeAuthMiddleware);
+router.post('/', offerController.createOffer);
+router.put('/:id', offerController.updateOffer);
+router.delete('/:id', offerController.deleteOffer);
 
 module.exports = router;

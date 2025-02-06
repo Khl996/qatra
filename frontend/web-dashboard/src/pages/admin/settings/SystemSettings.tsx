@@ -1,212 +1,186 @@
+import { useState } from 'react';
 import {
   Box,
-  Heading,
+  SimpleGrid,
   Card,
   CardHeader,
   CardBody,
-  Stack,
-  Tabs,
-  TabList,
-  TabPanels,
-  TabPanel,
-  Tab,
+  Heading,
   FormControl,
   FormLabel,
   Input,
-  Switch,
   NumberInput,
   NumberInputField,
   NumberInputStepper,
   NumberIncrementStepper,
   NumberDecrementStepper,
-  Select,
-  Button,
-  Divider,
-  Text,
-  HStack,
+  Switch,
   VStack,
-  InputGroup,
-  InputRightAddon,
+  Button,
+  useToast,
+  Divider,
+  Text
 } from '@chakra-ui/react';
+import api from '../../../services/api';
+
+interface SystemSettings {
+  siteName: string;
+  commissionRate: number;
+  minimumPoints: number;
+  enableRegistration: boolean;
+  maintenanceMode: boolean;
+  supportEmail: string;
+  supportPhone: string;
+}
 
 const SystemSettings = () => {
+  const [settings, setSettings] = useState<SystemSettings>({
+    siteName: 'قطرة',
+    commissionRate: 5,
+    minimumPoints: 100,
+    enableRegistration: true,
+    maintenanceMode: false,
+    supportEmail: 'support@qatra.com',
+    supportPhone: '0557401178'
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
+      await api.put('/api/admin/settings', settings);
+      toast({
+        title: "تم حفظ الإعدادات بنجاح",
+        status: "success",
+        duration: 3000,
+      });
+    } catch (error) {
+      toast({
+        title: "خطأ في حفظ الإعدادات",
+        status: "error",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <Stack spacing={6}>
-      <Heading size="lg">إعدادات النظام</Heading>
+    <Box p={4}>
+      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6}>
+        <Card>
+          <CardHeader>
+            <Heading size="md">الإعدادات العامة</Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={4} align="stretch">
+              <FormControl>
+                <FormLabel>اسم الموقع</FormLabel>
+                <Input
+                  value={settings.siteName}
+                  onChange={(e) => setSettings({ ...settings, siteName: e.target.value })}
+                />
+              </FormControl>
 
-      <Card>
-        <CardBody>
-          <Tabs>
-            <TabList>
-              <Tab>الإعدادات العامة</Tab>
-              <Tab>إعدادات العمولات</Tab>
-              <Tab>إعدادات النقاط</Tab>
-              <Tab>الأمان</Tab>
-            </TabList>
+              <FormControl>
+                <FormLabel>نسبة العمولة (%)</FormLabel>
+                <NumberInput
+                  value={settings.commissionRate}
+                  onChange={(value) => setSettings({ ...settings, commissionRate: Number(value) })}
+                  min={0}
+                  max={100}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </FormControl>
 
-            <TabPanels>
-              {/* الإعدادات العامة */}
-              <TabPanel>
-                <VStack spacing={6} align="stretch">
-                  <FormControl>
-                    <FormLabel>اسم التطبيق</FormLabel>
-                    <Input defaultValue="قطرة" />
-                  </FormControl>
+              <FormControl>
+                <FormLabel>الحد الأدنى للنقاط</FormLabel>
+                <NumberInput
+                  value={settings.minimumPoints}
+                  onChange={(value) => setSettings({ ...settings, minimumPoints: Number(value) })}
+                  min={0}
+                >
+                  <NumberInputField />
+                  <NumberInputStepper>
+                    <NumberIncrementStepper />
+                    <NumberDecrementStepper />
+                  </NumberInputStepper>
+                </NumberInput>
+              </FormControl>
 
-                  <FormControl>
-                    <FormLabel>البريد الإلكتروني للدعم</FormLabel>
-                    <Input defaultValue="support@qatra.com" />
-                  </FormControl>
+              <Divider />
 
-                  <FormControl>
-                    <FormLabel>رقم الجوال للدعم</FormLabel>
-                    <Input defaultValue="0500000000" />
-                  </FormControl>
+              <FormControl display="flex" alignItems="center">
+                <FormLabel mb="0">تفعيل التسجيل</FormLabel>
+                <Switch
+                  isChecked={settings.enableRegistration}
+                  onChange={(e) => setSettings({ ...settings, enableRegistration: e.target.checked })}
+                />
+              </FormControl>
 
-                  <FormControl display="flex" alignItems="center">
-                    <FormLabel mb="0">
-                      تفعيل التسجيل للمتاجر الجديدة
-                    </FormLabel>
-                    <Switch defaultChecked />
-                  </FormControl>
+              <FormControl display="flex" alignItems="center">
+                <FormLabel mb="0">وضع الصيانة</FormLabel>
+                <Switch
+                  isChecked={settings.maintenanceMode}
+                  onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
+                />
+              </FormControl>
+            </VStack>
+          </CardBody>
+        </Card>
 
-                  <FormControl display="flex" alignItems="center">
-                    <FormLabel mb="0">
-                      تفعيل الإشعارات التلقائية
-                    </FormLabel>
-                    <Switch defaultChecked />
-                  </FormControl>
-                </VStack>
-              </TabPanel>
+        <Card>
+          <CardHeader>
+            <Heading size="md">معلومات الدعم الفني</Heading>
+          </CardHeader>
+          <CardBody>
+            <VStack spacing={4} align="stretch">
+              <FormControl>
+                <FormLabel>البريد الإلكتروني للدعم</FormLabel>
+                <Input
+                  type="email"
+                  value={settings.supportEmail}
+                  onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })}
+                />
+              </FormControl>
 
-              {/* إعدادات العمولات */}
-              <TabPanel>
-                <VStack spacing={6} align="stretch">
-                  <FormControl>
-                    <FormLabel>العمولة الافتراضية للمتاجر الجديدة</FormLabel>
-                    <InputGroup>
-                      <NumberInput defaultValue={10} min={0} max={100} w="full">
-                        <NumberInputField />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                      <InputRightAddon children="%" />
-                    </InputGroup>
-                  </FormControl>
+              <FormControl>
+                <FormLabel>رقم هاتف الدعم</FormLabel>
+                <Input
+                  type="tel"
+                  value={settings.supportPhone}
+                  onChange={(e) => setSettings({ ...settings, supportPhone: e.target.value })}
+                />
+              </FormControl>
 
-                  <FormControl>
-                    <FormLabel>الحد الأدنى للعمولة</FormLabel>
-                    <InputGroup>
-                      <NumberInput defaultValue={5} min={0} max={100} w="full">
-                        <NumberInputField />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                      <InputRightAddon children="%" />
-                    </InputGroup>
-                  </FormControl>
+              <Box mt={4}>
+                <Text color="gray.500" fontSize="sm">
+                  * سيتم عرض معلومات الدعم الفني للمستخدمين والمتاجر في حال واجهتهم أي مشكلة.
+                </Text>
+              </Box>
+            </VStack>
+          </CardBody>
+        </Card>
 
-                  <FormControl>
-                    <FormLabel>دورة تحصيل العمولات</FormLabel>
-                    <Select defaultValue="monthly">
-                      <option value="weekly">أسبوعي</option>
-                      <option value="monthly">شهري</option>
-                      <option value="quarterly">ربع سنوي</option>
-                    </Select>
-                  </FormControl>
-                </VStack>
-              </TabPanel>
-
-              {/* إعدادات النقاط */}
-              <TabPanel>
-                <VStack spacing={6} align="stretch">
-                  <FormControl>
-                    <FormLabel>نسبة النقاط من قيمة الفاتورة</FormLabel>
-                    <InputGroup>
-                      <NumberInput defaultValue={1} min={0} max={100} w="full">
-                        <NumberInputField />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                      <InputRightAddon children="%" />
-                    </InputGroup>
-                  </FormControl>
-
-                  <FormControl>
-                    <FormLabel>صلاحية النقاط</FormLabel>
-                    <InputGroup>
-                      <NumberInput defaultValue={365} min={1} w="full">
-                        <NumberInputField />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                      <InputRightAddon children="يوم" />
-                    </InputGroup>
-                  </FormControl>
-
-                  <FormControl display="flex" alignItems="center">
-                    <FormLabel mb="0">
-                      تفعيل نظام النقاط
-                    </FormLabel>
-                    <Switch defaultChecked />
-                  </FormControl>
-                </VStack>
-              </TabPanel>
-
-              {/* إعدادات الأمان */}
-              <TabPanel>
-                <VStack spacing={6} align="stretch">
-                  <FormControl>
-                    <FormLabel>مدة صلاحية جلسة المستخدم</FormLabel>
-                    <InputGroup>
-                      <NumberInput defaultValue={24} min={1} w="full">
-                        <NumberInputField />
-                        <NumberInputStepper>
-                          <NumberIncrementStepper />
-                          <NumberDecrementStepper />
-                        </NumberInputStepper>
-                      </NumberInput>
-                      <InputRightAddon children="ساعة" />
-                    </InputGroup>
-                  </FormControl>
-
-                  <FormControl display="flex" alignItems="center">
-                    <FormLabel mb="0">
-                      تفعيل المصادقة الثنائية
-                    </FormLabel>
-                    <Switch defaultChecked />
-                  </FormControl>
-
-                  <FormControl display="flex" alignItems="center">
-                    <FormLabel mb="0">
-                      تفعيل تسجيل الدخول عبر البصمة
-                    </FormLabel>
-                    <Switch />
-                  </FormControl>
-                </VStack>
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
-        </CardBody>
-      </Card>
-
-      <HStack justify="flex-start" spacing={4}>
-        <Button colorScheme="blue">
-          حفظ التغييرات
-        </Button>
-        <Button variant="outline">
-          إعادة تعيين
-        </Button>
-      </HStack>
-    </Stack>
+        <Box gridColumn={{ lg: "1 / -1" }}>
+          <Button
+            colorScheme="blue"
+            size="lg"
+            w="full"
+            onClick={handleSave}
+            isLoading={isLoading}
+          >
+            حفظ الإعدادات
+          </Button>
+        </Box>
+      </SimpleGrid>
+    </Box>
   );
 };
 

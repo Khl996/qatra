@@ -1,137 +1,251 @@
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs'); // تأكد من استخدام bcryptjs
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const User = require('../models/User');
+const Store = require('../models/Store');
+const logger = require('../config/logger');
+const { Op } = require('sequelize');  // إضافة هذا السطر
 
 const generateUniqueCode = () => {
+    // توليد رقم عشوائي من 8 أرقام
     return Math.floor(10000000 + Math.random() * 90000000).toString();
 };
 
-exports.register = async (req, res) => {
-    const { name, email, phone, password } = req.body;
+const authController = {
+    mobileLogin: async (req, res) => {
+        try {
+            const { identifier, password } = req.body;
+            const user = await User.findOne({
+                where: {
+                    [Op.or]: [
+                        { email: identifier },
+                        { phone: identifier },
+                        { uniqueCode: identifier }
+                    ]
+                }
+            });
 
-    try {
-        const existingUser = await User.findOne({ where: { email } });
-        if (existingUser) {
-            console.log('Email is already in use');
-            return res.status(400).json({ message: 'Email is already in use' });
+            if (!user || !(await bcrypt.compare(password, user.password))) {
+                return res.status(401).json({ message: 'بيانات الدخول غير صحيحة' });
+            }
+
+            const token = jwt.sign(
+                { id: user.id, role: user.role },
+                process.env.JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            res.json({
+                token,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
+                    uniqueCode: user.uniqueCode
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
         }
+    },
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const uniqueCode = generateUniqueCode();
-
-        const newUser = await User.create({
-            name,
-            email,
-            phone,
-            password: hashedPassword,
-            uniqueCode,
-        });
-
-        console.log('User registered successfully');
-        res.status(201).json({ message: 'User registered successfully', user: newUser });
-    } catch (error) {
-        console.error('Error registering user:', error);
-        res.status(500).json({ message: 'Error registering user', error: error.message });
-    }
-};
-
-exports.login = async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const user = await User.findOne({ where: { email } });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        const isPasswordValid = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Invalid credentials' });
-        }
-
-        user.lastLogin = new Date();
-        await user.save();
-
-        const token = jwt.sign(
-            { id: user.id, role: user.role, permissions: user.permissions },
-            process.env.JWT_SECRET,
-            { expiresIn: '1h' }
-        );
-
-        res.status(200).json({ message: 'Login successful', token });
-    } catch (error) {
-        res.status(500).json({ message: 'Error logging in', error: error.message });
-    }
-};
-
-exports.getUserPurchaseHistory = async (req, res) => {
-    try {
-        const userId = req.user.id;
-
-        const purchaseHistory = []; // Replace with actual logic to retrieve purchase history
-
-        res.status(200).json({ message: 'Purchase history retrieved successfully', history: purchaseHistory });
-    } catch (error) {
-        res.status(500).json({ message: 'Error retrieving purchase history', error: error.message });
-    }
-};
-
-exports.getUserProfile = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const user = await User.findByPk(userId, {
-            attributes: ['id', 'name', 'email', 'phone', 'uniqueCode', 'role', 'permissions']
-        });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).json({ message: 'Error retrieving user profile', error: error.message });
-    }
-};
-
-exports.updateUserProfile = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const { name, phone, password } = req.body;
-
-        const user = await User.findByPk(userId);
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        user.name = name || user.name;
-        user.phone = phone || user.phone;
-        if (password) {
+    mobileRegister: async (req, res) => {
+        try {
+            const { name, email, phone, password } = req.body;
             const hashedPassword = await bcrypt.hash(password, 10);
-            user.password = hashedPassword;
-        }
-        await user.save();
+            const uniqueCode = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-        res.status(200).json({ message: 'User profile updated successfully', user });
-    } catch (error) {
-        res.status(500).json({ message: 'Error updating user profile', error: error.message });
+            const user = await User.create({
+                name,
+                email,
+                phone,
+                password: hashedPassword,
+                uniqueCode
+            });
+
+            const token = jwt.sign(
+                { id: user.id, role: user.role },
+                process.env.JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            res.status(201).json({
+                message: 'تم التسجيل بنجاح',
+                token,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
+                    uniqueCode: user.uniqueCode
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    storeLogin: async (req, res) => {
+        try {
+            const { email, password } = req.body;
+            const store = await Store.findOne({ where: { email } });
+
+            if (!store || !(await bcrypt.compare(password, store.password))) {
+                return res.status(401).json({ message: 'بيانات الدخول غير صحيحة' });
+            }
+
+            const token = jwt.sign(
+                { id: store.id, type: 'store' },
+                process.env.JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            res.json({
+                token,
+                store: {
+                    id: store.id,
+                    name: store.name,
+                    email: store.email
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    storeRegister: async (req, res) => {
+        try {
+            const { name, email, phone, password, category, description } = req.body;
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            const store = await Store.create({
+                name,
+                email,
+                phone,
+                password: hashedPassword,
+                category,
+                description,
+                status: 'pending'
+            });
+
+            res.status(201).json({
+                message: 'تم تسجيل المتجر بنجاح، بانتظار موافقة الإدارة',
+                store: {
+                    id: store.id,
+                    name: store.name,
+                    email: store.email
+                }
+            });
+        } catch (error) {
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    verifyOTP: async (req, res) => {
+        // سيتم إضافة منطق التحقق من OTP لاحقاً
+        res.status(200).json({ message: 'تم التحقق بنجاح' });
+    },
+
+    register: async (req, res) => {
+        try {
+            const { name, email, phone, password } = req.body;
+            const hashedPassword = await bcrypt.hash(password, 10);
+            
+            const user = await User.create({
+                name,
+                email,
+                phone,
+                password: hashedPassword,
+                uniqueCode: Math.floor(10000000 + Math.random() * 90000000).toString()
+            });
+
+            const token = jwt.sign(
+                { id: user.id, role: user.role },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+
+            res.status(201).json({
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    uniqueCode: user.uniqueCode
+                },
+                token
+            });
+        } catch (error) {
+            logger.error('Registration error:', error);
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    login: async (req, res) => {
+        try {
+            const { identifier, password } = req.body;
+
+            const user = await User.findOne({
+                where: {
+                    [Op.or]: [
+                        { email: identifier },
+                        { phone: identifier },
+                        { uniqueCode: identifier }
+                    ]
+                }
+            });
+
+            if (!user) {
+                return res.status(401).json({ message: 'Invalid credentials' });
+            }
+
+            const isValidPassword = await bcrypt.compare(password, user.password);
+            if (!isValidPassword) {
+                return res.status(401).json({ message: 'Invalid credentials' });
+            }
+
+            const token = jwt.sign(
+                { id: user.id, role: user.role },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+
+            res.json({
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    uniqueCode: user.uniqueCode
+                },
+                token
+            });
+        } catch (error) {
+            logger.error('Login error:', error);
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    verifyOtp: async (req, res) => {
+        try {
+            const { phone, otp } = req.body;
+            // تنفيذ منطق التحقق من OTP هنا
+            res.json({ message: 'OTP verified successfully' });
+        } catch (error) {
+            logger.error('OTP verification error:', error);
+            res.status(500).json({ message: error.message });
+        }
+    },
+
+    forgotPassword: async (req, res) => {
+        try {
+            const { email } = req.body;
+            // تنفيذ منطق إعادة تعيين كلمة المرور هنا
+            res.json({ message: 'Password reset instructions sent' });
+        } catch (error) {
+            logger.error('Forgot password error:', error);
+            res.status(500).json({ message: error.message });
+        }
     }
 };
 
-exports.deleteUser = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const user = await User.findByPk(id);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        await user.destroy();
-        res.status(200).json({ message: 'User deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting user', error: error.message });
-    }
-};
+module.exports = authController;

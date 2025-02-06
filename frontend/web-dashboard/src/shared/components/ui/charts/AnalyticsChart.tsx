@@ -31,10 +31,10 @@ interface AnalyticsChartProps {
       backgroundColor: string;
     }>;
   };
-  title: string;
+  title?: string; // Make title optional
 }
 
-const AnalyticsChart = ({ data, title }: AnalyticsChartProps) => {
+const AnalyticsChart: React.FC<AnalyticsChartProps> = ({ data, title }) => {
   const options = {
     responsive: true,
     plugins: {
@@ -50,6 +50,7 @@ const AnalyticsChart = ({ data, title }: AnalyticsChartProps) => {
 
   return (
     <Box p={4} bg="white" borderRadius="lg" boxShadow="sm">
+      {title && <h3>{title}</h3>}
       <Line options={options} data={data} />
     </Box>
   );

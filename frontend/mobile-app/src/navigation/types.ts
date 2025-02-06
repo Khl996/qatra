@@ -1,14 +1,15 @@
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
-};
-
-export type MainTabParamList = {
-  Home: undefined;
-  Stores: undefined; // إضافة شاشة المتاجر
-  Points: undefined;
-  Offers: undefined;
+  StoreDetails: { id: string };
+  OfferDetails: { 
+    id: string;
+    storeId: string; // Add storeId parameter
+  };
   Profile: undefined;
+  Notifications: undefined;
 };
 
 export type AuthStackParamList = {
@@ -20,3 +21,16 @@ export type AuthStackParamList = {
     mode: 'register' | 'reset';
   };
 };
+
+export type MainTabParamList = {
+  Home: undefined;
+  Stores: undefined;
+  Points: undefined;
+  Offers: undefined;
+  Profile: undefined;
+};
+
+// نوع التنقل للشاشة الرئيسية
+export type HomeScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList
+>;

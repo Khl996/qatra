@@ -41,7 +41,14 @@ interface OfferFormModalProps {
   onSubmit: (data: OfferFormData) => Promise<void>;
 }
 
-export const OfferFormModal = ({ isOpen, onClose, offer, onSubmit }: OfferFormModalProps) => {
+interface FormErrors {
+  title?: string;
+  value?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+const OfferFormModal: React.FC<OfferFormModalProps> = ({ isOpen, onClose, offer, onSubmit }) => {
   const [formData, setFormData] = useState<OfferFormData>({
     title: offer?.title || '',
     description: offer?.description || '',
@@ -52,18 +59,21 @@ export const OfferFormModal = ({ isOpen, onClose, offer, onSubmit }: OfferFormMo
     endDate: offer?.endDate || new Date().toISOString().split('T')[0],
     isActive: offer?.isActive ?? true,
   });
-  const [errors, setErrors] = useState<Partial<OfferFormData>>({});
+  const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
-  const handleSubmit = async () => {
-    // التحقق من صحة البيانات
-    const newErrors: Partial<OfferFormData> = {};
+  const validateForm = () => {
+    const newErrors: FormErrors = {};
     if (!formData.title) newErrors.title = 'عنوان العرض مطلوب';
-    if (!formData.value) newErrors.value = 'قيمة العرض مطلوبة';
+    if (!formData.value || Number(formData.value) <= 0) newErrors.value = 'قيمة العرض مطلوبة';
     if (!formData.startDate) newErrors.startDate = 'تاريخ البداية مطلوب';
     if (!formData.endDate) newErrors.endDate = 'تاريخ النهاية مطلوب';
+    return newErrors;
+  };
 
+  const handleSubmit = async () => {
+    const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;

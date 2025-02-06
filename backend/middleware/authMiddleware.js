@@ -2,19 +2,95 @@
 // المسار: backend/middleware/authMiddleware.js
 
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const Store = require('../models/Store');
+const Admin = require('../models/Admin');
+const logger = require('../config/logger');
 
 const authMiddleware = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
+        
         if (!token) {
-            return res.status(401).json({ message: 'غير مصرح' });
+            return res.status(401).json({ message: 'No token provided' });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded;
+        const user = await User.findByPk(decoded.id);
+        
+        if (!user) {
+            return res.status(401).json({ message: 'User not found' });
+        }
+
+        req.user = user;
         next();
     } catch (error) {
-        return res.status(401).json({ message: 'توكن غير صالح' });
+        logger.error('Auth middleware error:', error);
+        res.status(401).json({ message: 'Invalid token' });
+    }
+};
+
+const adminMiddleware = async (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'Access denied. Admin only.' });
+    }
+    next();
+};
+
+const storeAuthMiddleware = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ message: 'No token provided' });
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.type !== 'store') {
+            return res.status(403).json({ message: 'Store access required' });
+        }
+
+        const store = await Store.findByPk(decoded.id);
+        if (!store) {
+            return res.status(404).json({ message: 'Store not found' });
+        }
+
+        req.store = store;
+        next();
+    } catch (error) {
+        res.status(401).json({ message: 'Invalid token' });
+    }
+};
+
+const adminAuthMiddleware = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ message: 'التوكن غير موجود' });
+        }
+
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
+            const admin = await Admin.findByPk(decoded.id);
+            
+            if (!admin) {
+                return res.status(401).json({ message: 'حساب المسؤول غير صالح' });
+            }
+
+            req.admin = admin;
+            next();
+        } catch (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(401).json({ 
+                    message: 'انتهت صلاحية الجلسة، الرجاء إعادة تسجيل الدخول',
+                    code: 'TOKEN_EXPIRED'
+                });
+            }
+            throw err;
+        }
+    } catch (error) {
+        logger.error('Admin auth middleware error:', error);
+        res.status(401).json({ message: 'خطأ في المصادقة' });
     }
 };
 
@@ -64,29 +140,34 @@ const validateIdentifier = (req, res, next) => {
   next();
 };
 
-const storeAuthMiddleware = async (req, res, next) => {
+const adminAuth = async (req, res, next) => {
     try {
-        const token = req.headers.authorization?.split(' ')[1];
+        const token = req.header('Authorization')?.replace('Bearer ', '');
         if (!token) {
             return res.status(401).json({ message: 'غير مصرح' });
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        if (decoded.type !== 'store') {
-            return res.status(403).json({ message: 'غير مصرح للمتاجر فقط' });
+        const admin = await Admin.findByPk(decoded.id);
+
+        if (!admin || admin.status !== 'active') {
+            return res.status(401).json({ message: 'غير مصرح' });
         }
 
-        req.store = decoded;
+        req.admin = admin;
         next();
     } catch (error) {
-        return res.status(401).json({ message: 'توكن غير صالح' });
+        res.status(401).json({ message: 'غير مصرح' });
     }
 };
 
 module.exports = {
     authMiddleware,
+    adminMiddleware,
     isAdmin,
     checkPermissions,
     validateIdentifier,
-    storeAuthMiddleware
+    storeAuthMiddleware,
+    adminAuthMiddleware,
+    adminAuth
 };

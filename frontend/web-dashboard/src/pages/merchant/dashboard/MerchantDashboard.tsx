@@ -1,5 +1,12 @@
+import { useEffect } from 'react';
+import { Grid, Box, useToast } from '@chakra-ui/react';
+import { useAppSelector, useAppDispatch } from '../../../hooks/useAppDispatch';
+import StatisticsCard from '../../../shared/components/ui/statistics/StatisticsCard';
+import AnalyticsChart from '../../../shared/components/ui/charts/AnalyticsChart';
+import { getPointsHistory } from '../../../store/slices/pointsSlice';
+import { getOffers } from '../../../store/slices/offersSlice';
+
 import {
-  Box,
   SimpleGrid,
   Stat,
   StatLabel,
@@ -27,6 +34,34 @@ import { useNavigate } from 'react-router-dom';
 import { LineChart } from '../../../shared/components/ui/charts';
 
 const MerchantDashboard = () => {
+  const dispatch = useAppDispatch();
+  const toast = useToast();
+  const { transactions } = useAppSelector(state => state.points);
+  const { offers } = useAppSelector(state => state.offers);
+  const { user } = useAppSelector(state => state.auth);
+
+  useEffect(() => {
+    const loadDashboardData = async () => {
+      try {
+        await Promise.all([
+          dispatch(getPointsHistory()).unwrap(),
+          dispatch(getOffers()).unwrap()
+        ]);
+      } catch (error) {
+        toast({
+          title: 'خطأ في تحميل البيانات',
+          status: 'error',
+          duration: 3000,
+        });
+      }
+    };
+
+    loadDashboardData();
+  }, [dispatch, toast]);
+
+  const totalPoints = transactions.reduce((sum, t) => sum + t.points, 0);
+  const activeOffers = offers.filter(o => o.status === 'active').length;
+
   const navigate = useNavigate();
 
   // بيانات تجريبية
@@ -87,6 +122,21 @@ const MerchantDashboard = () => {
       console.error('Chart error:', error);
       return <Text>حدث خطأ في تحميل الرسم البياني</Text>;
     }
+  };
+
+  const formatAnalyticsData = (transactions: any[]) => {
+    const dates = transactions.map(t => new Date(t.date).toLocaleDateString('ar-SA'));
+    const points = transactions.map(t => t.points);
+    
+    return {
+        labels: dates,
+        datasets: [{
+            label: 'النقاط',
+            data: points,
+            borderColor: 'rgb(53, 162, 235)',
+            backgroundColor: 'rgba(53, 162, 235, 0.5)'
+        }]
+    };
   };
 
   return (
@@ -180,6 +230,32 @@ const MerchantDashboard = () => {
           </Table>
         </CardBody>
       </Card>
+
+      <Box p={4}>
+        <Grid templateColumns="repeat(3, 1fr)" gap={6} mb={6}>
+          <StatisticsCard
+            title="إجمالي النقاط"
+            value={totalPoints}
+            icon={FiStar}
+          />
+          <StatisticsCard
+            title="العروض النشطة"
+            value={activeOffers}
+            icon={FiTag}
+          />
+          <StatisticsCard
+            title="العملاء"
+            value={transactions.length}
+            icon={FiUsers}
+          />
+        </Grid>
+
+        <Box mt={8}>
+          <AnalyticsChart 
+            data={formatAnalyticsData(transactions)}
+          />
+        </Box>
+      </Box>
     </Stack>
   );
 };

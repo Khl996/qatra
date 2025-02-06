@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Box,
   Heading,
@@ -25,11 +26,25 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
 } from '@chakra-ui/react';
 import { FiDownload, FiMoreVertical, FiDollarSign, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
-import { LineChart } from '../../../shared/components/ui/charts';
+import { LineChart, DoughnutChart } from '../../../shared/components/ui/charts';
+import TableFilters from '../../../shared/components/ui/tables/TableFilters';
+import DataTable from '../../../shared/components/ui/tables/DataTable';
 
 const FinancialReports = () => {
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+
+  const handleSearch = (value: string) => {
+    // Implement search logic
+    console.log('Searching:', value);
+  };
+
   const financialStats = [
     {
       label: 'إجمالي الإيرادات',
@@ -94,6 +109,14 @@ const FinancialReports = () => {
     ],
   };
 
+  const commissionData = {
+    labels: ['المتاجر النشطة', 'المتاجر غير النشطة'],
+    datasets: [{
+      data: [70, 30],
+      backgroundColor: ['#4CAF50', '#f44336']
+    }]
+  };
+
   return (
     <Stack spacing={6}>
       <Flex justify="space-between" align="center">
@@ -134,9 +157,39 @@ const FinancialReports = () => {
           <Heading size="md">تحليل الإيرادات والعمولات</Heading>
         </CardHeader>
         <CardBody>
-          <Box h="300px">
-            <LineChart data={revenueData} />
-          </Box>
+          <Tabs>
+            <TabList>
+              <Tab>الإيرادات</Tab>
+              <Tab>العمولات</Tab>
+              <Tab>المدفوعات</Tab>
+            </TabList>
+
+            <TabPanels>
+              <TabPanel>
+                <Stack spacing={4}>
+                  <TableFilters
+                    onDateRangeChange={setDateRange}
+                    showDateRange
+                    onSearch={handleSearch}
+                  />
+                  <Box h="300px">
+                    <LineChart data={revenueData} />
+                  </Box>
+                  <Button colorScheme="blue">
+                    تصدير التقرير
+                  </Button>
+                </Stack>
+              </TabPanel>
+
+              <TabPanel>
+                <Stack spacing={4}>
+                  <Box h="300px">
+                    <DoughnutChart data={commissionData} />
+                  </Box>
+                </Stack>
+              </TabPanel>
+            </TabPanels>
+          </Tabs>
         </CardBody>
       </Card>
 

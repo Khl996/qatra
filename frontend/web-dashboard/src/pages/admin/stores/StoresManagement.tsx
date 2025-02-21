@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Table,
@@ -34,7 +35,7 @@ interface Store {
 const StoresManagement = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('pending'); // لعرض المتاجر المعلقة افتراضياً
   const [searchQuery, setSearchQuery] = useState('');
   const toast = useToast();
 

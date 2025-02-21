@@ -1,10 +1,14 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// للوصول للملفات في مجلد uploads
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Debug middleware
 app.use((req, res, next) => {
@@ -21,7 +25,10 @@ require('./models/relationships');
 
 // Routes
 const adminRoutes = require('./routes/adminRoutes');
-app.use('/api/admin', adminRoutes); // تغيير المسار للتوافق مع الواجهة الأمامية
+const authRoutes = require('./routes/authRoutes');
+
+app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes); // تأكد من إضافة هذا المسار
 
 // Error handling
 app.use((err, req, res, next) => {

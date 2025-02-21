@@ -39,9 +39,8 @@ export const login = createAsyncThunk(
   'auth/login',
   async ({ credentials, role }: LoginPayload, { rejectWithValue }) => {
     try {
-      console.log('Attempting login with:', { credentials, role });
-      // تغيير المسار ليتوافق مع الباكند
-      const response = await api.post(`/api/${role}/login`, credentials);
+      console.log('Login attempt:', { credentials, role });
+      const response = await api.post(`/api/auth/${role}/login`, credentials);
       console.log('Login response:', response.data);
       return { ...response.data, role };
     } catch (error: any) {

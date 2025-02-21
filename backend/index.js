@@ -13,11 +13,10 @@ app.use(express.json());
 app.use(debugMiddleware); // إضافة middleware التتبع
 
 // Routes
-app.use('/api/auth', require('./routes/authRoutes')); // إضافة مسارات المصادقة
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/stores', require('./routes/storeRoutes'));
-app.use('/api/points', require('./routes/pointRoutes'));
-app.use('/api/admin', require('./routes/adminRoutes')); // إضافة مسارات المسؤول
+app.use('/auth', require('./routes/authRoutes'));
+app.use('/stores', require('./routes/storeRoutes'));
+app.use('/points', require('./routes/pointRoutes'));
+app.use('/admin', require('./routes/adminRoutes'));
 
 // Test route
 app.get('/api/health', (req, res) => {

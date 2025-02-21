@@ -7,8 +7,10 @@ import { Carousel } from '../../components/common/Carousel';
 import { StoreCard } from '../../components/cards/StoreCard';
 import { api } from '../../config/api.config';
 import { useAuth } from '../../context/AuthContext';
+import storesApi from '../../services/api/stores';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// مثال للصور الإعلانية - سيتم استبدالها بصور حقيقية
+// مثال للصور الإعلانية - سيتم استبدالها بصور حقيقية 
 const carouselImages = [
   'https://example.com/ad1.jpg',
   'https://example.com/ad2.jpg',
@@ -24,8 +26,12 @@ export default function HomeScreen() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.get('/points');
-        setData(response.data);
+        // نتحقق من وجود توكن قبل طلب البيانات
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const response = await api.get('/points');
+          setData(response.data);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -33,11 +39,11 @@ export default function HomeScreen() {
 
     const fetchStores = async () => {
       try {
-        const featuredResponse = await api.get('/stores/featured');
-        setFeaturedStores(featuredResponse.data);
+        const { stores: featured } = await storesApi.getFeaturedStores();
+        setFeaturedStores(featured);
 
-        const nearbyResponse = await api.get('/stores/nearby');
-        setNearbyStores(nearbyResponse.data);
+        const { stores: nearby } = await storesApi.getNearbyStores(0, 0);
+        setNearbyStores(nearby);
       } catch (error) {
         console.error('Error fetching stores:', error);
       }

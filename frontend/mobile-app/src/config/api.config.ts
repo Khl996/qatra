@@ -1,13 +1,15 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'http://localhost:5000/api'; // تغيير هذا حسب عنوان الخادم الفعلي
+const API_BASE_URL = 'http://172.20.10.4:5000'; // بدون /api
 
 export const api = axios.create({
     baseURL: API_BASE_URL,
     headers: {
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+    timeout: 15000
 });
 
 api.interceptors.request.use(async (config) => {
@@ -38,12 +40,14 @@ export const endpoints = {
     },
     user: {
         profile: '/user/profile',
-        points: '/user/points',
+        points: '/points',
         offers: '/user/offers'
     },
     stores: {
+        all: '/stores',
+        featured: '/stores/featured',
         nearby: '/stores/nearby',
-        details: '/stores/details',
-        search: '/stores/search'
+        details: (id: string) => `/stores/${id}`,
+        offers: (id: string) => `/stores/${id}/offers`
     }
 };
